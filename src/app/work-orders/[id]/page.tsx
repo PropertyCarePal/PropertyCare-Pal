@@ -80,6 +80,41 @@ export default function WorkOrderDetailPage() {
   
     alert("Work order updated successfully.");
   }
+  async function deleteWorkOrder() {
+    if (!user || !params.id) return;
+  
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this work order?\n\nThis action cannot be undone."
+    );
+  
+    if (!confirmed) {
+      return;
+    }
+  
+    const { data, error } = await supabase
+    .from("work_orders")
+    .delete()
+    .eq("id", String(params.id))
+    .select();
+  
+  if (error) {
+    console.error("WORK ORDER DELETE ERROR:", error);
+    alert(`Unable to delete work order.\n\n${error.message}`);
+    return;
+  }
+  
+  if (!data || data.length === 0) {
+    console.error("WORK ORDER DELETE: NO ROW DELETED");
+    alert(
+      "The work order was not deleted. No matching work order was found."
+    );
+    return;
+  }
+  
+    alert("Work order deleted successfully.");
+  
+    window.location.replace("/work-orders");
+  }
   useEffect(() => {
     if (!loading && user && params.id) {
       loadWorkOrder();
@@ -374,6 +409,13 @@ export default function WorkOrderDetailPage() {
   className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
 >
   Edit Work Order
+</button>
+<button
+  type="button"
+  onClick={deleteWorkOrder}
+  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+>
+  Delete Work Order
 </button>
 </div>
         </div>

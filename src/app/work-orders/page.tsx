@@ -80,9 +80,9 @@ export default function WorkOrdersPage() {
       setLoadingWorkOrders(false);
     }
 
-    if (!loading) {
-      loadWorkOrders();
-    }
+    if (!loading && user) {
+        loadWorkOrders();
+      }
   }, [user, loading]);
 
   function getPropertyName(propertyId: string) {
