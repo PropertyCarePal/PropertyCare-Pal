@@ -192,6 +192,12 @@ export default function WorkOrdersPage() {
                   <h2 className="text-xl font-semibold text-gray-900">
                     {workOrder.title}
                   </h2>
+                  <Link
+  href={`/work-orders/${workOrder.id}`}
+  className="mt-1 inline-block text-sm font-medium text-blue-600 hover:text-blue-700"
+>
+  View Work Order →
+</Link>
 
                   <Link
                     href={`/properties/${workOrder.property_id}`}
