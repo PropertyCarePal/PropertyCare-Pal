@@ -32,6 +32,7 @@ export default function WorkOrdersPage() {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loadingWorkOrders, setLoadingWorkOrders] = useState(true);
+  const [statusFilter, setStatusFilter] = useState("All");
 
   useEffect(() => {
     async function loadWorkOrders() {
@@ -111,6 +112,26 @@ export default function WorkOrdersPage() {
         <p className="mt-2 text-gray-600">
           Manage maintenance work orders across all of your properties.
         </p>
+        <div className="mt-6">
+  <label
+    htmlFor="statusFilter"
+    className="mr-3 text-sm font-medium text-gray-700"
+  >
+    Filter by Status:
+  </label>
+
+  <select
+    id="statusFilter"
+    value={statusFilter}
+    onChange={(event) => setStatusFilter(event.target.value)}
+    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none"
+  >
+    <option value="All">All</option>
+    <option value="Open">Open</option>
+    <option value="In Progress">In Progress</option>
+    <option value="Completed">Completed</option>
+  </select>
+</div>
       </div>
 
       {workOrders.length === 0 ? (
@@ -125,7 +146,12 @@ export default function WorkOrdersPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {workOrders.map((workOrder) => (
+          {workOrders
+  .filter(
+    (workOrder) =>
+      statusFilter === "All" || workOrder.status === statusFilter
+  )
+  .map((workOrder) => (
             <div
               key={workOrder.id}
               className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
