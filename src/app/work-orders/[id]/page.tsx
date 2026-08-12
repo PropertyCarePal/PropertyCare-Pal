@@ -32,6 +32,7 @@ export default function WorkOrderDetailPage() {
   const { user, loading } = useAuth();
 
   const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
+  const [activities, setActivities] = useState<any[]>([]);
   const [property, setProperty] = useState<Property | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -76,6 +77,18 @@ export default function WorkOrderDetailPage() {
     }
   
     setWorkOrder(data);
+    const { data: activityData, error: activityError } = await supabase
+  .from("work_order_activity")
+  .select("*")
+  .eq("work_order_id", String(params.id))
+  .order("created_at", { ascending: false });
+
+  if (activityError) {
+    console.error("ACTIVITY LOAD ERROR:", activityError);
+  } else {
+    console.log("ACTIVITIES LOADED:", activityData);
+    setActivities(activityData || []);
+  }
     setEditing(false);
   
     alert("Work order updated successfully.");
@@ -122,6 +135,7 @@ export default function WorkOrderDetailPage() {
   }, [loading, user, params.id]);
 
   async function loadWorkOrder() {
+    console.log("LOAD WORK ORDER FUNCTION STARTED");
     if (!user || !params.id) return;
 
     setPageLoading(true);
@@ -150,8 +164,20 @@ export default function WorkOrderDetailPage() {
       setPageLoading(false);
       return;
     }
-
+    console.log("WORK ORDER LOADED - REACHED ACTIVITY QUERY");
     setWorkOrder(data);
+    const { data: activityData, error: activityError } = await supabase
+  .from("work_order_activity")
+  .select("*")
+  .eq("work_order_id", String(params.id))
+  .order("created_at", { ascending: false });
+
+if (activityError) {
+  console.error("ACTIVITY LOAD ERROR:", activityError);
+} else {
+  console.log("ACTIVITIES LOADED:", activityData);
+  setActivities(activityData || []);
+}
 
     const { data: propertyData, error: propertyError } = await supabase
       .from("properties")
@@ -420,6 +446,35 @@ export default function WorkOrderDetailPage() {
 </div>
         </div>
       </div>
+     
+      <div className="mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="text-xl font-semibold text-gray-900">
+          Activity History
+        </h2>
+
+        {activities.length === 0 ? (
+          <p className="mt-4 text-sm text-gray-500">
+            No activity recorded yet.
+          </p>
+        ) : (
+          <div className="mt-6 space-y-4">
+            {activities.map((activity) => (
+              <div
+                key={activity.id}
+                className="border-l-2 border-emerald-500 pl-4"
+              >
+                <p className="font-medium text-gray-900">
+                  {activity.description}
+                </p>
+
+                <p className="mt-1 text-xs text-gray-500">
+                  {new Date(activity.created_at).toLocaleString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>      
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm lg:col-span-2">
