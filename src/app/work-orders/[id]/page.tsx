@@ -34,7 +34,52 @@ export default function WorkOrderDetailPage() {
   const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
   const [property, setProperty] = useState<Property | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
 
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editPriority, setEditPriority] = useState("Medium");
+  const [editDueDate, setEditDueDate] = useState("");
+  const [editStatus, setEditStatus] = useState("Open");
+  const [editAssignedTo, setEditAssignedTo] = useState("");
+  const [editEstimatedCost, setEditEstimatedCost] = useState("");
+  const [editActualCost, setEditActualCost] = useState("");
+  const [editCompletionNotes, setEditCompletionNotes] = useState("");
+  async function saveWorkOrderChanges() {
+    if (!user || !params.id) return;
+  
+    const { data, error } = await supabase
+      .from("work_orders")
+      .update({
+        title: editTitle,
+        description: editDescription,
+        priority: editPriority,
+        due_date: editDueDate || null,
+        status: editStatus,
+        assigned_to: editAssignedTo,
+        estimated_cost: editEstimatedCost
+          ? Number(editEstimatedCost)
+          : null,
+        actual_cost: editActualCost
+          ? Number(editActualCost)
+          : null,
+        completion_notes: editCompletionNotes,
+      })
+      .eq("id", String(params.id))
+      .select()
+      .single();
+  
+    if (error) {
+      console.error("WORK ORDER UPDATE ERROR:", error);
+      alert(`Unable to save work order.\n\n${error.message}`);
+      return;
+    }
+  
+    setWorkOrder(data);
+    setEditing(false);
+  
+    alert("Work order updated successfully.");
+  }
   useEffect(() => {
     if (!loading && user && params.id) {
       loadWorkOrder();
@@ -116,6 +161,159 @@ export default function WorkOrderDetailPage() {
 
   return (
     <div className="space-y-6">
+    {editing && (
+  <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="flex items-center justify-between">
+      <h2 className="text-xl font-semibold text-gray-900">
+        Edit Work Order
+      </h2>
+
+      <button
+        type="button"
+        onClick={() => setEditing(false)}
+        className="text-sm font-medium text-gray-500 hover:text-gray-700"
+      >
+        Cancel
+      </button>
+    </div>
+
+    <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Title
+        </label>
+        <input
+          value={editTitle}
+          onChange={(e) => setEditTitle(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Status
+        </label>
+        <select
+          value={editStatus}
+          onChange={(e) => setEditStatus(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+        >
+          <option value="Open">Open</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Priority
+        </label>
+        <select
+          value={editPriority}
+          onChange={(e) => setEditPriority(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+        >
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+          <option value="Urgent">Urgent</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Due Date
+        </label>
+        <input
+          type="date"
+          value={editDueDate}
+          onChange={(e) => setEditDueDate(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Assigned To
+        </label>
+        <input
+          value={editAssignedTo}
+          onChange={(e) => setEditAssignedTo(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Estimated Cost
+        </label>
+        <input
+          type="number"
+          step="0.01"
+          value={editEstimatedCost}
+          onChange={(e) => setEditEstimatedCost(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Actual Cost
+        </label>
+        <input
+          type="number"
+          step="0.01"
+          value={editActualCost}
+          onChange={(e) => setEditActualCost(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+        />
+      </div>
+
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Description
+        </label>
+        <textarea
+          value={editDescription}
+          onChange={(e) => setEditDescription(e.target.value)}
+          rows={4}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+        />
+      </div>
+
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Completion Notes
+        </label>
+        <textarea
+          value={editCompletionNotes}
+          onChange={(e) => setEditCompletionNotes(e.target.value)}
+          rows={4}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+        />
+      </div>
+    </div>
+
+    <div className="mt-6 flex gap-3">
+      <button
+        type="button"
+        onClick={() => setEditing(false)}
+        className="rounded-lg border border-gray-300 px-5 py-3 text-gray-700 hover:bg-gray-50"
+      >
+        Cancel
+      </button>
+
+      <button
+  type="button"
+  onClick={saveWorkOrderChanges}
+  className="rounded-lg bg-emerald-600 px-5 py-3 font-medium text-white hover:bg-emerald-700"
+>
+  Save Changes
+</button> 
+    </div>
+  </div>
+)}
       <div>
         <Link
           href="/work-orders"
@@ -140,15 +338,44 @@ export default function WorkOrderDetailPage() {
             )}
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <span className="rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700">
-              {workOrder.status || "Open"}
-            </span>
+          <div className="flex flex-wrap items-center gap-2">
+  <span className="rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700">
+    {workOrder.status || "Open"}
+  </span>
 
-            <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700">
-              {workOrder.priority || "Medium"}
-            </span>
-          </div>
+  <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700">
+    {workOrder.priority || "Medium"}
+  </span>
+
+  <button
+  type="button"
+  onClick={() => {
+    setEditTitle(workOrder.title || "");
+    setEditDescription(workOrder.description || "");
+    setEditPriority(workOrder.priority || "Medium");
+    setEditDueDate(workOrder.due_date || "");
+    setEditStatus(workOrder.status || "Open");
+    setEditAssignedTo(workOrder.assigned_to || "");
+    setEditEstimatedCost(
+      workOrder.estimated_cost !== null &&
+      workOrder.estimated_cost !== undefined
+        ? String(workOrder.estimated_cost)
+        : ""
+    );
+    setEditActualCost(
+      workOrder.actual_cost !== null &&
+      workOrder.actual_cost !== undefined
+        ? String(workOrder.actual_cost)
+        : ""
+    );
+    setEditCompletionNotes(workOrder.completion_notes || "");
+    setEditing(true);
+  }}
+  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+>
+  Edit Work Order
+</button>
+</div>
         </div>
       </div>
 
