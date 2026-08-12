@@ -33,7 +33,7 @@ export default function WorkOrdersPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loadingWorkOrders, setLoadingWorkOrders] = useState(true);
   const [statusFilter, setStatusFilter] = useState("All");
-
+  const [searchTerm, setSearchTerm] = useState("");
   useEffect(() => {
     async function loadWorkOrders() {
       if (!user) {
@@ -114,6 +114,23 @@ export default function WorkOrdersPage() {
         </p>
         <div className="mt-6">
   <label
+    htmlFor="workOrderSearch"
+    className="mr-3 text-sm font-medium text-gray-700"
+  >
+    Search:
+  </label>
+
+  <input
+    id="workOrderSearch"
+    type="text"
+    value={searchTerm}
+    onChange={(event) => setSearchTerm(event.target.value)}
+    placeholder="Search work orders..."
+    className="w-full max-w-md rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none"
+  />
+</div>
+        <div className="mt-6">
+  <label
     htmlFor="statusFilter"
     className="mr-3 text-sm font-medium text-gray-700"
   >
@@ -146,10 +163,18 @@ export default function WorkOrdersPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {workOrders
+        {workOrders
   .filter(
     (workOrder) =>
-      statusFilter === "All" || workOrder.status === statusFilter
+      (statusFilter === "All" || workOrder.status === statusFilter) &&
+      (
+        workOrder.title
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        workOrder.description
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase())
+      )
   )
   .map((workOrder) => (
             <div
