@@ -163,18 +163,24 @@ export default function WorkOrdersPage() {
         </div>
       ) : (
         <div className="space-y-4">
-        {workOrders
+       {workOrders
   .filter(
-    (workOrder) =>
-      (statusFilter === "All" || workOrder.status === statusFilter) &&
-      (
-        workOrder.title
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        workOrder.description
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase())
-      )
+    (workOrder) => {
+      const property = properties.find(
+        (item) => item.id === workOrder.property_id
+      );
+
+      const search = searchTerm.toLowerCase();
+
+      return (
+        (statusFilter === "All" || workOrder.status === statusFilter) &&
+        (
+          workOrder.title?.toLowerCase().includes(search) ||
+          workOrder.description?.toLowerCase().includes(search) ||
+          property?.name?.toLowerCase().includes(search)
+        )
+      );
+    }
   )
   .map((workOrder) => (
             <div
