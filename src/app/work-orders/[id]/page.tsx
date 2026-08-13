@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
 type WorkOrder = {
+    organization_id: string;
   id: string;
   property_id: string;
   title: string;
@@ -33,6 +34,7 @@ export default function WorkOrderDetailPage() {
 
   const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
   const [activities, setActivities] = useState<any[]>([]);
+  const [attachments, setAttachments] = useState<any[]>([]);
   const [property, setProperty] = useState<Property | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -92,6 +94,225 @@ export default function WorkOrderDetailPage() {
     setEditing(false);
   
     alert("Work order updated successfully.");
+  }
+  async function uploadAttachment(file: File) {
+    if (!user || !params.id || !workOrder) return;
+  
+    try {
+      console.log("ATTACHMENT UPLOAD STARTED:", file.name);
+  
+      const filePath = `${workOrder.organization_id}/${params.id}/${crypto.randomUUID()}-${file.name}`;
+  
+      const { error: uploadError } = await supabase.storage
+        .from("work-order-attachments")
+        .upload(filePath, file);
+  
+      if (uploadError) {
+        console.error("ATTACHMENT UPLOAD ERROR:", uploadError);
+        alert(`Unable to upload attachment.\n\n${uploadError.message}`);
+        return;
+      }
+  
+      const { data: attachmentData, error: attachmentError } =
+        await supabase
+          .from("work_order_attachments")
+          .insert({
+            work_order_id: String(params.id),
+            organization_id: workOrder.organization_id,
+            user_id: user.id,
+            file_name: file.name,
+            file_path: filePath,
+            file_type: file.type || null,
+            file_size: file.size,
+          })
+          .select()
+          .single();
+  
+      if (attachmentError) {
+        console.error(
+          "ATTACHMENT RECORD ERROR:",
+          attachmentError
+        );
+  
+        await supabase.storage
+          .from("work-order-attachments")
+          .remove([filePath]);
+  
+        alert(
+          `The file uploaded, but its database record could not be created.\n\n${attachmentError.message}`
+        );
+  
+        return;
+      }
+  
+      console.log(
+        "ATTACHMENT UPLOADED:",
+        attachmentData
+      );
+  
+      setAttachments((current) => [
+        attachmentData,
+        ...current,
+      ]);
+      const { error: activityError } = await supabase
+  .from("work_order_activity")
+  .insert({
+    work_order_id: String(params.id),
+    organization_id: workOrder.organization_id,
+    user_id: user.id,
+    activity_type: "attachment_uploaded",
+    description: `Attachment uploaded: ${file.name}`,
+  });
+
+if (activityError) {
+  console.error(
+    "ATTACHMENT ACTIVITY ERROR:",
+    activityError
+  );
+}
+  
+      alert("Attachment uploaded successfully.");
+    } catch (error) {
+      console.error("ATTACHMENT UNEXPECTED ERROR:", error);
+  
+      alert(
+        `Unable to upload attachment.\n\n${
+          error instanceof Error
+            ? error.message
+            : "Unknown error"
+        }`
+      );
+    }
+  }
+  async function viewAttachment(attachment: any) {
+    try {
+      console.log("OPENING ATTACHMENT:", attachment.file_name);
+  
+      const { data, error } = await supabase.storage
+        .from("work-order-attachments")
+        .createSignedUrl(attachment.file_path, 60);
+  
+      if (error) {
+        console.error("ATTACHMENT VIEW ERROR:", error);
+        alert(
+          `Unable to open attachment.\n\n${error.message}`
+        );
+        return;
+      }
+  
+      if (!data?.signedUrl) {
+        alert("Unable to create a secure attachment link.");
+        return;
+      }
+  
+      window.open(data.signedUrl, "_blank");
+    } catch (error) {
+      console.error("ATTACHMENT VIEW UNEXPECTED ERROR:", error);
+  
+      alert(
+        `Unable to open attachment.\n\n${
+          error instanceof Error
+            ? error.message
+            : "Unknown error"
+        }`
+      );
+    }
+  }
+  async function deleteAttachment(attachment: any) {
+    if (!user || !params.id) return;
+  
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${attachment.file_name}"?\n\nThis action cannot be undone.`
+    );
+  
+    if (!confirmed) {
+      return;
+    }
+  
+    try {
+      console.log(
+        "ATTACHMENT DELETE STARTED:",
+        attachment.file_name
+      );
+  
+      const { error: storageError } = await supabase.storage
+        .from("work-order-attachments")
+        .remove([attachment.file_path]);
+  
+      if (storageError) {
+        console.error(
+          "ATTACHMENT STORAGE DELETE ERROR:",
+          storageError
+        );
+  
+        alert(
+          `Unable to delete attachment.\n\n${storageError.message}`
+        );
+  
+        return;
+      }
+  
+      const { error: databaseError } = await supabase
+        .from("work_order_attachments")
+        .delete()
+        .eq("id", attachment.id)
+        .eq("work_order_id", String(params.id));
+  
+      if (databaseError) {
+        console.error(
+          "ATTACHMENT DATABASE DELETE ERROR:",
+          databaseError
+        );
+  
+        alert(
+          `The file was removed from storage, but the database record could not be deleted.\n\n${databaseError.message}`
+        );
+  
+        return;
+      }
+  
+      console.log(
+        "ATTACHMENT DELETED:",
+        attachment.file_name
+      );
+  
+      setAttachments((current) =>
+        current.filter(
+          (item) => item.id !== attachment.id
+        )
+      );
+  
+      alert("Attachment deleted successfully.");
+      const { error: activityError } = await supabase
+  .from("work_order_activity")
+  .insert({
+    work_order_id: String(params.id),
+    organization_id: workOrder?.organization_id,
+    user_id: user.id,
+    activity_type: "attachment_deleted",
+    description: `Attachment deleted: ${attachment.file_name}`,
+  });
+
+if (activityError) {
+  console.error(
+    "ATTACHMENT DELETE ACTIVITY ERROR:",
+    activityError
+  );
+}
+    } catch (error) {
+      console.error(
+        "ATTACHMENT DELETE UNEXPECTED ERROR:",
+        error
+      );
+  
+      alert(
+        `Unable to delete attachment.\n\n${
+          error instanceof Error
+            ? error.message
+            : "Unknown error"
+        }`
+      );
+    }
   }
   async function deleteWorkOrder() {
     if (!user || !params.id) return;
@@ -177,6 +398,18 @@ if (activityError) {
 } else {
   console.log("ACTIVITIES LOADED:", activityData);
   setActivities(activityData || []);
+}
+const { data: attachmentData, error: attachmentError } = await supabase
+  .from("work_order_attachments")
+  .select("*")
+  .eq("work_order_id", String(params.id))
+  .order("created_at", { ascending: false });
+
+if (attachmentError) {
+  console.error("ATTACHMENT LOAD ERROR:", attachmentError);
+} else {
+  console.log("ATTACHMENTS LOADED:", attachmentData);
+  setAttachments(attachmentData || []);
 }
 
     const { data: propertyData, error: propertyError } = await supabase
@@ -446,7 +679,73 @@ if (activityError) {
 </div>
         </div>
       </div>
-     
+      <div className="mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+  <div className="flex items-center justify-between">
+    <h2 className="text-xl font-semibold text-gray-900">
+      Attachments
+    </h2>
+
+    <>
+    <input
+  type="file"
+  id="work-order-attachment-input"
+  className="hidden"
+  onChange={(event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    uploadAttachment(file);
+
+    event.target.value = "";
+  }}
+/>
+
+  <label
+    htmlFor="work-order-attachment-input"
+    className="cursor-pointer rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+  >
+    Upload File
+  </label>
+</>
+  </div>
+
+  {attachments.length === 0 ? (
+    <p className="mt-4 text-sm text-gray-500">
+      No attachments uploaded yet.
+    </p>
+  ) : (
+    <div className="mt-6 space-y-3">
+      {attachments.map((attachment) => (
+        <div
+          key={attachment.id}
+          className="flex items-center justify-between rounded-lg border border-gray-200 p-4"
+        >
+          <div>
+          <button
+  type="button"
+  onClick={() => viewAttachment(attachment)}
+  className="font-medium text-emerald-700 hover:text-emerald-800 hover:underline"
+>
+  {attachment.file_name}
+</button>
+
+            <p className="mt-1 text-xs text-gray-500">
+              {attachment.file_type || "Unknown file type"}
+            </p>
+          </div>
+          <button
+    type="button"
+    onClick={() => deleteAttachment(attachment)}
+    className="rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+  >
+    Delete
+  </button>
+</div>
+      ))}
+    </div>
+  )}
+</div> 
       <div className="mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-gray-900">
           Activity History
