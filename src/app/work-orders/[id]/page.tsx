@@ -50,6 +50,7 @@ export default function WorkOrderDetailPage() {
   const [editCompletionNotes, setEditCompletionNotes] = useState("");
   async function saveWorkOrderChanges() {
     if (!user || !params.id) return;
+    const previousStatus = workOrder?.status;
   
     const { data, error } = await supabase
       .from("work_orders")
@@ -493,9 +494,11 @@ if (attachmentError) {
           className="mt-1 w-full rounded-lg border border-gray-300 p-3"
         >
           <option value="Open">Open</option>
-          <option value="In Progress">In Progress</option>
-          <option value="Completed">Completed</option>
-          <option value="Cancelled">Cancelled</option>
+<option value="Scheduled">Scheduled</option>
+<option value="In Progress">In Progress</option>
+<option value="Completed">Completed</option>
+<option value="Closed">Closed</option>
+<option value="Cancelled">Cancelled</option>
         </select>
       </div>
 
