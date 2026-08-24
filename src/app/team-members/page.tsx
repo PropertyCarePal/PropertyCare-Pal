@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 type TeamMember = {
   id: string;
@@ -18,6 +19,7 @@ type WorkOrder = {
 
 export default function TeamMembersPage() {
   const { user, loading } = useAuth();
+  const router = useRouter();
 
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
@@ -49,6 +51,16 @@ export default function TeamMembersPage() {
         .select("id, full_name, role")
         .eq("organization_id", profile.organization_id)
         .order("full_name", { ascending: true });
+        const { data: workOrderData, error: workOrderError } = await supabase
+  .from("work_orders")
+  .select("id, assigned_user_id, status, due_date")
+  .eq("organization_id", profile.organization_id);
+
+if (workOrderError) {
+  console.error("WORK ORDERS LOAD ERROR:", workOrderError);
+} else {
+  setWorkOrders(workOrderData ?? []);
+}
        
 
       if (teamError) {
@@ -108,6 +120,11 @@ export default function TeamMembersPage() {
             const memberWorkOrders = workOrders.filter(
                 (workOrder) => workOrder.assigned_user_id === member.id
               );
+              console.log(
+                "TEAM MEMBER WORKLOAD:",
+                member.full_name,
+                memberWorkOrders
+              );
               
               const activeCount = memberWorkOrders.filter(
                 (workOrder) => workOrder.status !== "Completed"
@@ -143,23 +160,40 @@ export default function TeamMembersPage() {
                 {member.role || "Team Member"}
               </p>
               <div className="mt-5 grid grid-cols-3 gap-3">
-  <div className="rounded-lg bg-gray-50 p-3 text-center">
-    <p className="text-xs font-medium text-gray-500">
-      Active
-    </p>
-    <p className="mt-1 text-2xl font-bold text-gray-900">
-      {activeCount}
-    </p>
-  </div>
+              <button
+  type="button"
+  onClick={() => {
+    router.push(
+      `/work-orders?assignedUser=${encodeURIComponent(member.id)}`
+    );
+  }}
+  className="rounded-lg bg-gray-50 p-3 text-center transition hover:bg-gray-100"
+>
+  <p className="text-xs font-medium text-gray-500">
+    Active
+  </p>
 
-  <div className="rounded-lg bg-red-50 p-3 text-center">
-    <p className="text-xs font-medium text-red-600">
-      Overdue
-    </p>
-    <p className="mt-1 text-2xl font-bold text-red-700">
-      {overdueCount}
-    </p>
-  </div>
+  <p className="mt-1 text-2xl font-bold text-gray-900">
+    {activeCount}
+  </p>
+</button>
+<button
+  type="button"
+  onClick={() => {
+    router.push(
+      `/work-orders?assignedUser=${encodeURIComponent(member.id)}&overdue=true`
+    );
+  }}
+  className="rounded-lg bg-red-50 p-3 text-center transition hover:bg-red-100"
+>
+  <p className="text-xs font-medium text-red-600">
+    Overdue
+  </p>
+
+  <p className="mt-1 text-2xl font-bold text-red-700">
+    {overdueCount}
+  </p>
+</button>
 
   <div className="rounded-lg bg-emerald-50 p-3 text-center">
     <p className="text-xs font-medium text-emerald-600">

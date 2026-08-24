@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,6 +34,9 @@ type TeamMember = {
 };
 export default function WorkOrdersPage() {
   const { user, loading } = useAuth();
+  const searchParams = useSearchParams();
+const assignedUserFromUrl = searchParams.get("assignedUser");
+const overdueFromUrl = searchParams.get("overdue") === "true";
 
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
@@ -46,6 +50,7 @@ export default function WorkOrdersPage() {
   const [showDueToday, setShowDueToday] = useState(false);
   const [showDueThisWeek, setShowDueThisWeek] = useState(false);
   const [showAssignedToMe, setShowAssignedToMe] = useState(false);
+  const [assignedUserFilter, setAssignedUserFilter] = useState("All");
   useEffect(() => {
     async function loadWorkOrders() {
       if (!user) {
@@ -385,6 +390,7 @@ export default function WorkOrdersPage() {
     setShowDueToday(false);
     setShowDueThisWeek(false);
     setShowAssignedToMe(false);
+    setAssignedUserFilter("All");
   }}
   className="ml-3 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
 >
@@ -571,6 +577,7 @@ setShowDueThisWeek(false);
     setShowDueToday(false);
     setShowDueThisWeek(false);
     setShowAssignedToMe(true);
+    setAssignedUserFilter("All");
     setSortOption("due_soonest");
   }}
   className="rounded-xl border-2 border-violet-300 bg-violet-50 p-5 text-left shadow-md transition hover:border-violet-500 hover:shadow-lg"
@@ -765,6 +772,11 @@ setShowDueThisWeek(false);
     const matchesStatus =
       statusFilter === "All" ||
       workOrder.status === statusFilter;
+      const matchesAssignedUser =
+      (assignedUserFilter === "All" || 
+        workOrder.assigned_user_id === assignedUserFilter) &&
+      (!assignedUserFromUrl ||
+        workOrder.assigned_user_id === assignedUserFromUrl);
       const matchesPriority =
   priorityFilter === "All" ||
   workOrder.priority === priorityFilter;
@@ -782,7 +794,8 @@ setShowDueThisWeek(false);
     
       return (
         matchesAssignedToMe &&
-        (!showOverdue || isOverdue) &&
+        matchesAssignedUser &&
+        (!showOverdue && !overdueFromUrl || isOverdue) &&
         (!showDueToday ||
           workOrder.due_date ===
             new Date().toISOString().split("T")[0]) &&
