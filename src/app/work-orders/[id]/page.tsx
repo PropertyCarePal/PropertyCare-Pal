@@ -816,10 +816,16 @@ if (attachmentError) {
         ) : (
           <div className="mt-6 space-y-4">
             {activities.map((activity) => (
-              <div
-                key={activity.id}
-                className="border-l-2 border-emerald-500 pl-4"
-              >
+            <div
+            key={activity.id}
+            className={
+              activity.description?.toLowerCase().includes("completed") ||
+              activity.description?.toLowerCase().includes("closed")
+                ? "border-l-4 border-emerald-600 bg-emerald-50 rounded-r-lg py-3 pl-4"
+                : "border-l-2 border-emerald-500 pl-4"
+            }
+          >
+             
                 <p className="font-medium text-gray-900">
                   {activity.description}
                 </p>
