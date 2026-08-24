@@ -16,6 +16,7 @@ type WorkOrder = {
   due_date: string | null;
   status: string | null;
   assigned_to: string | null;
+  assigned_user_id: string | null;
   estimated_cost: number | null;
   actual_cost: number | null;
   completion_notes: string | null;
@@ -45,6 +46,14 @@ export default function WorkOrderDetailPage() {
   const [editDueDate, setEditDueDate] = useState("");
   const [editStatus, setEditStatus] = useState("Open");
   const [editAssignedTo, setEditAssignedTo] = useState("");
+  const [editAssignedUserId, setEditAssignedUserId] = useState("");
+  const [teamMembers, setTeamMembers] = useState<
+  {
+    id: string;
+    full_name: string | null;
+    role: string | null;
+  }[]
+>([]);
   const [editEstimatedCost, setEditEstimatedCost] = useState("");
   const [editActualCost, setEditActualCost] = useState("");
   const [editCompletionNotes, setEditCompletionNotes] = useState("");
@@ -61,6 +70,7 @@ export default function WorkOrderDetailPage() {
         due_date: editDueDate || null,
         status: editStatus,
         assigned_to: editAssignedTo,
+        assigned_user_id: editAssignedUserId || null,
         estimated_cost: editEstimatedCost
           ? Number(editEstimatedCost)
           : null,
@@ -68,6 +78,10 @@ export default function WorkOrderDetailPage() {
           ? Number(editActualCost)
           : null,
         completion_notes: editCompletionNotes,
+        completed_at:
+  editStatus === "Completed"
+    ? workOrder.completed_at || new Date().toISOString()
+    : null,
       })
       .eq("id", String(params.id))
       .select()
@@ -388,6 +402,18 @@ if (activityError) {
     }
     console.log("WORK ORDER LOADED - REACHED ACTIVITY QUERY");
     setWorkOrder(data);
+    setEditAssignedUserId(data.assigned_user_id ?? "");
+    const { data: teamData, error: teamError } = await supabase
+  .from("profiles")
+  .select("id, full_name, role")
+  .eq("organization_id", profile.organization_id)
+  .order("full_name", { ascending: true });
+
+if (teamError) {
+  console.error("TEAM MEMBERS LOAD ERROR:", teamError);
+} else {
+  setTeamMembers(teamData ?? []);
+}
     const { data: activityData, error: activityError } = await supabase
   .from("work_order_activity")
   .select("*")
@@ -540,6 +566,27 @@ if (attachmentError) {
           className="mt-1 w-full rounded-lg border border-gray-300 p-3"
         />
       </div>
+      <div className="mt-4">
+  <label className="block text-sm font-medium text-gray-700">
+    Assigned Team Member
+  </label>
+ 
+ 
+  <select
+  value={editAssignedUserId || workOrder?.assigned_user_id || ""}
+  onChange={(e) => setEditAssignedUserId(e.target.value)}
+  className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+>
+    <option value="">Unassigned</option>
+
+    {teamMembers.map((member) => (
+      <option key={member.id} value={member.id}>
+        {member.full_name || "Unnamed User"}
+        {member.role ? ` — ${member.role}` : ""}
+      </option>
+    ))}
+  </select>
+</div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">
@@ -619,7 +666,14 @@ if (attachmentError) {
           ← Back to Work Orders
         </Link>
 
-        <div className="mt-4 flex flex-col justify-between gap-4 md:flex-row">
+        <div className="relative mt-4 flex flex-col justify-between gap-4 overflow-hidden rounded-xl border border-gray-200 bg-white p-6 md:flex-row">
+        {workOrder.status === "Completed" && (
+  <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+    <div className="-rotate-12 rounded-lg border-4 border-gray-400 px-8 py-3 text-5xl font-black tracking-widest text-gray-400 opacity-25">
+      CLOSED
+    </div>
+  </div>
+)}
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
               {workOrder.title}
@@ -653,7 +707,8 @@ if (attachmentError) {
     setEditDueDate(workOrder.due_date || "");
     setEditStatus(workOrder.status || "Open");
     setEditAssignedTo(workOrder.assigned_to || "");
-    setEditEstimatedCost(
+    setEditAssignedUserId(workOrder.assigned_user_id || "");
+       setEditEstimatedCost(
       workOrder.estimated_cost !== null &&
       workOrder.estimated_cost !== undefined
         ? String(workOrder.estimated_cost)
@@ -800,21 +855,28 @@ if (attachmentError) {
                 Due Date
               </dt>
               <dd className="mt-1 text-sm text-gray-900">
-                {workOrder.due_date
-                  ? new Date(workOrder.due_date).toLocaleDateString()
-                  : "Not set"}
-              </dd>
+  {workOrder.due_date
+    ? (() => {
+        const [year, month, day] = workOrder.due_date.split("-");
+        return `${month}/${day}/${year}`;
+      })()
+    : "Not set"}
+</dd> 
             </div>
 
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Assigned To
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900">
-                {workOrder.assigned_to || "Not assigned"}
-              </dd>
-            </div>
+  <dt className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+    Assigned To
+  </dt>
 
+  <dd className="mt-1 text-sm text-gray-900">
+    {workOrder.assigned_user_id
+      ? teamMembers.find(
+          (member) => member.id === workOrder.assigned_user_id
+        )?.full_name || "Assigned user"
+      : workOrder.assigned_to || "Not assigned"}
+  </dd>
+</div>
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                 Estimated Cost
