@@ -826,13 +826,37 @@ if (attachmentError) {
             }
           >
              
-                <p className="font-medium text-gray-900">
-                  {activity.description}
-                </p>
+             {activity.description?.toLowerCase().includes("completed") ||
+activity.description?.toLowerCase().includes("closed") ? (
+  <>
+    <p className="text-xs font-bold uppercase tracking-wider text-emerald-700">
+      ✓ Work Order Closed
+    </p>
 
-                <p className="mt-1 text-xs text-gray-500">
-                  {new Date(activity.created_at).toLocaleString()}
-                </p>
+    <p className="mt-1 font-semibold text-gray-900">
+      {activity.description}
+    </p>
+
+    <p className="mt-1 text-sm font-medium text-emerald-700">
+      Completed on{" "}
+      {new Date(activity.created_at).toLocaleDateString()}
+    </p>
+
+    <p className="mt-1 text-xs text-gray-500">
+      {new Date(activity.created_at).toLocaleTimeString()}
+    </p>
+  </>
+) : (
+  <>
+    <p className="font-medium text-gray-900">
+      {activity.description}
+    </p>
+
+    <p className="mt-1 text-xs text-gray-500">
+      {new Date(activity.created_at).toLocaleString()}
+    </p>
+  </>
+)}
               </div>
             ))}
           </div>
