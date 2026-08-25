@@ -164,8 +164,8 @@ if (workOrderError) {
   type="button"
   onClick={() => {
     router.push(
-      `/work-orders?assignedUser=${encodeURIComponent(member.id)}`
-    );
+        `/work-orders?assignedUser=${encodeURIComponent(member.id)}&status=active`
+      );
   }}
   className="rounded-lg bg-gray-50 p-3 text-center transition hover:bg-gray-100"
 >
@@ -195,14 +195,23 @@ if (workOrderError) {
   </p>
 </button>
 
-  <div className="rounded-lg bg-emerald-50 p-3 text-center">
-    <p className="text-xs font-medium text-emerald-600">
-      Completed
-    </p>
-    <p className="mt-1 text-2xl font-bold text-emerald-700">
-      {completedCount}
-    </p>
-  </div>
+<button
+  type="button"
+  onClick={() => {
+    router.push(
+      `/work-orders?assignedUser=${encodeURIComponent(member.id)}&status=Completed`
+    );
+  }}
+  className="rounded-lg bg-emerald-50 p-3 text-center transition hover:bg-emerald-100"
+>
+  <p className="text-xs font-medium text-emerald-600">
+    Completed
+  </p>
+
+  <p className="mt-1 text-2xl font-bold text-emerald-700">
+    {completedCount}
+  </p>
+</button>
 </div>
             </div>
                         );

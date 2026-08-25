@@ -37,6 +37,7 @@ export default function WorkOrdersPage() {
   const searchParams = useSearchParams();
 const assignedUserFromUrl = searchParams.get("assignedUser");
 const overdueFromUrl = searchParams.get("overdue") === "true";
+const statusFromUrl = searchParams.get("status");
 
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
@@ -769,9 +770,14 @@ setShowDueThisWeek(false);
       dueDate < today &&
       workOrder.status !== "Completed";
     
-    const matchesStatus =
-      statusFilter === "All" ||
-      workOrder.status === statusFilter;
+      const matchesStatus =
+  (statusFilter === "All" ||
+    workOrder.status === statusFilter) &&
+  (!statusFromUrl ||
+    (statusFromUrl === "active"
+      ? workOrder.status === "Open" ||
+        workOrder.status === "In Progress"
+      : workOrder.status === statusFromUrl));
       const matchesAssignedUser =
       (assignedUserFilter === "All" || 
         workOrder.assigned_user_id === assignedUserFilter) &&
