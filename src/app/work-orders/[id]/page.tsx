@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -31,6 +31,7 @@ type Property = {
 
 export default function WorkOrderDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const { user, loading } = useAuth();
 
   const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
@@ -586,6 +587,22 @@ if (attachmentError) {
       </option>
     ))}
   </select>
+  {(editAssignedUserId || workOrder?.assigned_user_id) && (
+  <button
+    type="button"
+    onClick={() => {
+      const assignedMemberId =
+        editAssignedUserId || workOrder?.assigned_user_id;
+
+      if (assignedMemberId) {
+        router.push(`/team-members/${assignedMemberId}`);
+      }
+    }}
+    className="mt-2 text-sm font-medium text-blue-600 hover:text-blue-800"
+  >
+    View Team Member →
+  </button>
+)}
 </div>
 
       <div>
