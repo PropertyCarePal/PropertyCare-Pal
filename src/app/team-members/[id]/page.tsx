@@ -112,6 +112,7 @@ if (workOrderError) {
   if (loading) {
     return (
       <div className="p-8">
+     
         <p className="text-gray-500">Loading team member...</p>
       </div>
     );
@@ -129,6 +130,14 @@ if (workOrderError) {
 
   return (
     <div className="p-8">
+      <button
+        type="button"
+        onClick={() => router.push("/team-members")}
+        className="mb-6 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+      >
+        ← Back to Team Members
+      </button>
+  
       <h1 className="text-3xl font-bold text-gray-900">
         {member.full_name || "Team Member"}
       </h1>
