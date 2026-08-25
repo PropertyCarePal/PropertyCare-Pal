@@ -152,9 +152,15 @@ if (workOrderError) {
               key={member.id}
               className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
             >
-              <h2 className="text-xl font-semibold text-gray-900">
-                {member.full_name || "Unnamed Team Member"}
-              </h2>
+             <button
+  type="button"
+  onClick={() => {
+    router.push(`/team-members/${member.id}`);
+  }}
+  className="text-left text-lg font-semibold text-gray-900 hover:text-emerald-600"
+>
+  {member.full_name || "Team Member"}
+</button>
 
               <p className="mt-2 text-sm text-emerald-600">
                 {member.role || "Team Member"}
