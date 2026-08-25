@@ -25,6 +25,10 @@ export default function TeamMemberDetailsPage() {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [editFullName, setEditFullName] = useState("");
+  const [editRole, setEditRole] = useState("");
+  const [saving, setSaving] = useState(false); 
   const activeCount = workOrders.filter(
     (workOrder) =>
       workOrder.status === "Open" ||
@@ -47,7 +51,33 @@ export default function TeamMemberDetailsPage() {
   
     return dueDate < today;
   }).length;
-
+  async function handleSaveChanges() {
+    if (!id) return;
+  
+    setSaving(true);
+    setError("");
+  
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: editFullName.trim(),
+        role: editRole.trim() || null,
+      })
+      .eq("id", id)
+      .select("id, full_name, role")
+      .single();
+  
+    if (error) {
+      console.error("TEAM MEMBER UPDATE ERROR:", error);
+      setError("Unable to save team member changes.");
+      setSaving(false);
+      return;
+    }
+  
+    setMember(data);
+    setEditing(false);
+    setSaving(false);
+  }
   useEffect(() => {
     async function loadTeamMember() {
       const { data, error } = await supabase
@@ -106,6 +136,77 @@ if (workOrderError) {
       <p className="mt-2 text-gray-600">
         {member.role || "No role assigned"}
       </p>
+      <button
+  type="button"
+  onClick={() => {
+    setEditFullName(member.full_name || "");
+    setEditRole(member.role || "");
+    setEditing(true);
+  }}
+  className="mt-4 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
+>
+  Edit Team Member
+</button>
+{editing && (
+  <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+    <h2 className="text-lg font-semibold text-gray-900">
+      Edit Team Member
+    </h2>
+
+    <div className="mt-4">
+      <label
+        htmlFor="editFullName"
+        className="block text-sm font-medium text-gray-700"
+      >
+        Full Name
+      </label>
+
+      <input
+        id="editFullName"
+        type="text"
+        value={editFullName}
+        onChange={(e) => setEditFullName(e.target.value)}
+        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
+      />
+    </div>
+
+    <div className="mt-4">
+      <label
+        htmlFor="editRole"
+        className="block text-sm font-medium text-gray-700"
+      >
+        Role
+      </label>
+
+      <input
+        id="editRole"
+        type="text"
+        value={editRole}
+        onChange={(e) => setEditRole(e.target.value)}
+        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
+      />
+    </div>
+
+    <div className="mt-6 flex gap-3">
+      <button
+        type="button"
+        onClick={() => setEditing(false)}
+        className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+      >
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        onClick={handleSaveChanges}
+        disabled={saving}
+        className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+      >
+        {saving ? "Saving..." : "Save Changes"}
+      </button>
+    </div>
+  </div>
+)}
   
       <div className="mt-8 grid gap-4 md:grid-cols-3">
       <button
