@@ -16,6 +16,17 @@ type Property = {
   status: string | null;
   property_type: string | null;
 };
+type PropertyContact = {
+  id: string;
+  organization_id: string;
+  property_id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
 type Tab = "Overview" | "Assets" | "Work Orders" | "Service History";
 
@@ -26,6 +37,16 @@ export default function PropertyDetailsPage() {
 
   const [property, setProperty] = useState<Property | null>(null);
   const [loadingProperty, setLoadingProperty] = useState(true);
+  const [editingContact, setEditingContact] = useState(false);
+const [contactName, setContactName] = useState("");
+const [contactEmail, setContactEmail] = useState("");
+const [contactPhone, setContactPhone] = useState("");
+const [contactNotes, setContactNotes] = useState("");
+const [savingContact, setSavingContact] = useState(false);
+  const [propertyContact, setPropertyContact] =
+  useState<PropertyContact | null>(null);
+
+const [loadingContact, setLoadingContact] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
   const [assets, setAssets] = useState<any[]>([]);
   const [showAssetForm, setShowAssetForm] = useState(false);
@@ -234,6 +255,70 @@ async function updateWorkOrderStatus(
         )
       );
   }
+  async function savePropertyContact() {
+    if (!user || !property) return;
+  
+    if (!contactName.trim()) {
+      alert("Please enter the homeowner or client name.");
+      return;
+    }
+  
+    setSavingContact(true);
+  
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("organization_id")
+        .eq("id", user.id)
+        .single();
+  
+      if (profileError || !profile) {
+        console.error("PROFILE ERROR:", profileError);
+        alert("Unable to determine your organization.");
+        return;
+      }
+  
+      const contactPayload = {
+        organization_id: profile.organization_id,
+        property_id: property.id,
+        full_name: contactName.trim(),
+        email: contactEmail.trim() || null,
+        phone: contactPhone.trim() || null,
+        notes: contactNotes.trim() || null,
+        updated_at: new Date().toISOString(),
+      };
+  
+      let result;
+  
+      if (propertyContact) {
+        result = await supabase
+          .from("property_contacts")
+          .update(contactPayload)
+          .eq("id", propertyContact.id)
+          .select()
+          .single();
+      } else {
+        result = await supabase
+          .from("property_contacts")
+          .insert(contactPayload)
+          .select()
+          .single();
+      }
+  
+      if (result.error) {
+        console.error("PROPERTY CONTACT SAVE ERROR:", result.error);
+        alert(`Unable to save client.\n\n${result.error.message}`);
+        return;
+      }
+  
+      setPropertyContact(result.data);
+      setEditingContact(false);
+  
+      alert("Client information saved successfully.");
+    } finally {
+      setSavingContact(false);
+    }
+  }
 
 useEffect(() => {
     async function loadProperty() {
@@ -280,7 +365,22 @@ useEffect(() => {
         setAssets(assetData || []);
       }
       setProperty(data);
-      const { data: workOrderData, error: workOrderError } = await supabase
+
+const { data: contactData, error: contactError } = await supabase
+  .from("property_contacts")
+  .select("*")
+  .eq("property_id", String(params.id))
+  .eq("organization_id", profile.organization_id)
+  .maybeSingle();
+
+if (contactError) {
+  console.error("PROPERTY CONTACT LOAD ERROR:", contactError);
+} else {
+  console.log("PROPERTY CONTACT LOADED:", contactData);
+  setPropertyContact(contactData || null);
+}
+
+const { data: workOrderData, error: workOrderError } = await supabase
       .from("work_orders")
       .select("*")
       .eq("property_id", String(params.id))
@@ -446,6 +546,156 @@ useEffect(() => {
               </div>
 
             </div>
+            <div className="rounded-xl bg-white p-6 shadow">
+  <div className="flex items-center justify-between">
+    <div>
+      <h2 className="text-lg font-semibold text-gray-900">
+        Homeowner / Client
+      </h2>
+
+      <p className="mt-1 text-sm text-gray-500">
+        Contact information for this property
+      </p>
+    </div>
+
+    <button
+      type="button"
+      onClick={() => {
+        setContactName(propertyContact?.full_name || "");
+        setContactEmail(propertyContact?.email || "");
+        setContactPhone(propertyContact?.phone || "");
+        setContactNotes(propertyContact?.notes || "");
+        setEditingContact(true);
+      }}
+      className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
+    >
+      {propertyContact ? "Edit Client" : "Add Client"}
+    </button>
+  </div>
+
+  {propertyContact ? (
+    <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div>
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+          Name
+        </p>
+        <p className="mt-1 text-gray-900">
+          {propertyContact.full_name}
+        </p>
+      </div>
+
+      <div>
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+          Email
+        </p>
+        <p className="mt-1 text-gray-900">
+          {propertyContact.email || "Not provided"}
+        </p>
+      </div>
+
+      <div>
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+          Phone
+        </p>
+        <p className="mt-1 text-gray-900">
+          {propertyContact.phone || "Not provided"}
+        </p>
+      </div>
+
+      <div>
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+          Notes
+        </p>
+        <p className="mt-1 whitespace-pre-wrap text-gray-900">
+          {propertyContact.notes || "No notes"}
+        </p>
+      </div>
+    </div>
+  ) : (
+    <p className="mt-6 text-sm text-gray-500">
+      No homeowner or client information has been added yet.
+    </p>
+  )}
+</div>
+{editingContact && (
+  <div className="rounded-xl bg-white p-6 shadow">
+    <h2 className="text-lg font-semibold text-gray-900">
+      {propertyContact ? "Edit Homeowner / Client" : "Add Homeowner / Client"}
+    </h2>
+
+    <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Full Name
+        </label>
+        <input
+          value={contactName}
+          onChange={(e) => setContactName(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+          placeholder="Homeowner name"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Email
+        </label>
+        <input
+          type="email"
+          value={contactEmail}
+          onChange={(e) => setContactEmail(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+          placeholder="email@example.com"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Phone
+        </label>
+        <input
+          type="tel"
+          value={contactPhone}
+          onChange={(e) => setContactPhone(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+          placeholder="(760) 555-1234"
+        />
+      </div>
+
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Notes
+        </label>
+        <textarea
+          value={contactNotes}
+          onChange={(e) => setContactNotes(e.target.value)}
+          rows={4}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+          placeholder="General notes about the homeowner or client..."
+        />
+      </div>
+    </div>
+
+    <div className="mt-6 flex gap-3">
+      <button
+        type="button"
+        onClick={() => setEditingContact(false)}
+        className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+      >
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        onClick={savePropertyContact} 
+        disabled={savingContact}
+        className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+      >
+        {savingContact ? "Saving..." : "Save Client"}
+      </button>
+    </div>
+  </div>
+)}
           </div>
 
         </div>
