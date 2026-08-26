@@ -27,7 +27,18 @@ type PropertyContact = {
   created_at: string;
   updated_at: string;
 };
-
+type PropertyAccess = {
+  id: string;
+  organization_id: string;
+  property_id: string;
+  gate_code: string | null;
+  alarm_information: string | null;
+  lockbox_code: string | null;
+  access_instructions: string | null;
+  private_notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
 type Tab = "Overview" | "Assets" | "Work Orders" | "Service History";
 
 export default function PropertyDetailsPage() {
@@ -43,6 +54,16 @@ const [contactEmail, setContactEmail] = useState("");
 const [contactPhone, setContactPhone] = useState("");
 const [contactNotes, setContactNotes] = useState("");
 const [savingContact, setSavingContact] = useState(false);
+const [propertyAccess, setPropertyAccess] =
+  useState<PropertyAccess | null>(null);
+
+const [editingAccess, setEditingAccess] = useState(false);
+const [gateCode, setGateCode] = useState("");
+const [alarmInformation, setAlarmInformation] = useState("");
+const [lockboxCode, setLockboxCode] = useState("");
+const [accessInstructions, setAccessInstructions] = useState("");
+const [privateNotes, setPrivateNotes] = useState("");
+const [savingAccess, setSavingAccess] = useState(false);
   const [propertyContact, setPropertyContact] =
   useState<PropertyContact | null>(null);
 
@@ -319,6 +340,66 @@ async function updateWorkOrderStatus(
       setSavingContact(false);
     }
   }
+  async function savePropertyAccess() {
+    if (!user || !property) return;
+  
+    setSavingAccess(true);
+  
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("organization_id")
+        .eq("id", user.id)
+        .single();
+  
+      if (profileError || !profile) {
+        console.error("PROFILE ERROR:", profileError);
+        alert("Unable to determine your organization.");
+        return;
+      }
+  
+      const accessPayload = {
+        organization_id: profile.organization_id,
+        property_id: property.id,
+        gate_code: gateCode.trim() || null,
+        alarm_information: alarmInformation.trim() || null,
+        lockbox_code: lockboxCode.trim() || null,
+        access_instructions: accessInstructions.trim() || null,
+        private_notes: privateNotes.trim() || null,
+        updated_at: new Date().toISOString(),
+      };
+  
+      let result;
+  
+      if (propertyAccess) {
+        result = await supabase
+          .from("property_access")
+          .update(accessPayload)
+          .eq("id", propertyAccess.id)
+          .select()
+          .single();
+      } else {
+        result = await supabase
+          .from("property_access")
+          .insert(accessPayload)
+          .select()
+          .single();
+      }
+  
+      if (result.error) {
+        console.error("PROPERTY ACCESS SAVE ERROR:", result.error);
+        alert(`Unable to save private access information.\n\n${result.error.message}`);
+        return;
+      }
+  
+      setPropertyAccess(result.data);
+      setEditingAccess(false);
+  
+      alert("Private access information saved successfully.");
+    } finally {
+      setSavingAccess(false);
+    }
+  }
 
 useEffect(() => {
     async function loadProperty() {
@@ -378,6 +459,19 @@ if (contactError) {
 } else {
   console.log("PROPERTY CONTACT LOADED:", contactData);
   setPropertyContact(contactData || null);
+}
+const { data: accessData, error: accessError } = await supabase
+  .from("property_access")
+  .select("*")
+  .eq("property_id", String(params.id))
+  .eq("organization_id", profile.organization_id)
+  .maybeSingle();
+
+if (accessError) {
+  console.error("PROPERTY ACCESS LOAD ERROR:", accessError);
+} else {
+  console.log("PROPERTY ACCESS LOADED:", accessData);
+  setPropertyAccess(accessData || null);
 }
 
 const { data: workOrderData, error: workOrderError } = await supabase
@@ -692,6 +786,186 @@ const { data: workOrderData, error: workOrderError } = await supabase
         className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
       >
         {savingContact ? "Saving..." : "Save Client"}
+      </button>
+    </div>
+  </div>
+)}
+<div className="rounded-xl border border-amber-200 bg-amber-50 p-6 shadow">
+  <div className="flex items-center justify-between">
+    <div>
+      <h2 className="text-lg font-semibold text-gray-900">
+        Private Property Access
+      </h2>
+
+      <p className="mt-1 text-sm text-amber-700">
+        Sensitive access information for authorized team members.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      onClick={() => {
+        setGateCode(propertyAccess?.gate_code || "");
+        setAlarmInformation(propertyAccess?.alarm_information || "");
+        setLockboxCode(propertyAccess?.lockbox_code || "");
+        setAccessInstructions(propertyAccess?.access_instructions || "");
+        setPrivateNotes(propertyAccess?.private_notes || "");
+        setEditingAccess(true);
+      }}
+      className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
+    >
+      {propertyAccess ? "Edit Access" : "Add Access"}
+    </button>
+  </div>
+
+  {propertyAccess ? (
+    <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div>
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+          Gate / Entry Code
+        </p>
+        <p className="mt-1 font-mono text-gray-900">
+          {propertyAccess.gate_code || "Not provided"}
+        </p>
+      </div>
+
+      <div>
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+          Alarm Information
+        </p>
+        <p className="mt-1 whitespace-pre-wrap font-mono text-gray-900">
+          {propertyAccess.alarm_information || "Not provided"}
+        </p>
+      </div>
+
+      <div>
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+          Lockbox Code
+        </p>
+        <p className="mt-1 font-mono text-gray-900">
+          {propertyAccess.lockbox_code || "Not provided"}
+        </p>
+      </div>
+
+      <div>
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+          Access Instructions
+        </p>
+        <p className="mt-1 whitespace-pre-wrap text-gray-900">
+          {propertyAccess.access_instructions || "Not provided"}
+        </p>
+      </div>
+
+      <div className="md:col-span-2">
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+          Private Notes
+        </p>
+        <p className="mt-1 whitespace-pre-wrap text-gray-900">
+          {propertyAccess.private_notes || "No private notes"}
+        </p>
+      </div>
+    </div>
+  ) : (
+    <p className="mt-6 text-sm text-gray-600">
+      No private access information has been added.
+    </p>
+  )}
+</div>
+{editingAccess && (
+  <div className="rounded-xl border border-amber-200 bg-white p-6 shadow">
+    <h2 className="text-lg font-semibold text-gray-900">
+      {propertyAccess
+        ? "Edit Private Property Access"
+        : "Add Private Property Access"}
+    </h2>
+
+    <p className="mt-1 text-sm text-amber-700">
+      This information should only be entered if you are authorized to store it.
+    </p>
+
+    <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Gate / Entry Code
+        </label>
+        <input
+          type="password"
+          value={gateCode}
+          onChange={(e) => setGateCode(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+          placeholder="Gate or entry code"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Lockbox Code
+        </label>
+        <input
+          type="password"
+          value={lockboxCode}
+          onChange={(e) => setLockboxCode(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+          placeholder="Lockbox code"
+        />
+      </div>
+
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Alarm Information
+        </label>
+        <textarea
+          value={alarmInformation}
+          onChange={(e) => setAlarmInformation(e.target.value)}
+          rows={3}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+          placeholder="Alarm instructions or information"
+        />
+      </div>
+
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Access Instructions
+        </label>
+        <textarea
+          value={accessInstructions}
+          onChange={(e) => setAccessInstructions(e.target.value)}
+          rows={4}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+          placeholder="Instructions for authorized team members..."
+        />
+      </div>
+
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Private Notes
+        </label>
+        <textarea
+          value={privateNotes}
+          onChange={(e) => setPrivateNotes(e.target.value)}
+          rows={4}
+          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
+          placeholder="Other private property information..."
+        />
+      </div>
+    </div>
+
+    <div className="mt-6 flex gap-3">
+      <button
+        type="button"
+        onClick={() => setEditingAccess(false)}
+        className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+      >
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        onClick={savePropertyAccess}
+        disabled={savingAccess}
+        className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+      >
+        {savingAccess ? "Saving..." : "Save Private Access"}
       </button>
     </div>
   </div>
