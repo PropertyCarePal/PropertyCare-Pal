@@ -138,19 +138,21 @@ export default function AssetDetailPage() {
               </p>
             </div>
 
-            <span
-              className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                asset.status === "Active"
-                  ? "bg-green-100 text-green-700"
-                  : asset.status === "Needs Repair"
-                  ? "bg-yellow-100 text-yellow-700"
-                  : asset.status === "Retired"
-                  ? "bg-gray-200 text-gray-700"
-                  : "bg-gray-100 text-gray-600"
-              }`}
-            >
-              {asset.status || "Not set"}
-            </span>
+            <div className="flex items-center gap-3">
+  <Link
+    href={`/assets/${asset.id}/edit`}
+    className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+  >
+    Edit
+  </Link>
+
+ 
+   <span className="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+  {asset.status || "Not set"}
+</span>
+</div>
+   
+
           </div>
         </div>
 

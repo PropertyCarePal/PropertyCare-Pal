@@ -23,7 +23,7 @@ type Asset = {
 
 export default function AssetsPage() {
   const { user, loading } = useAuth();
-
+ 
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loadingAssets, setLoadingAssets] = useState(true);
   const [properties, setProperties] = useState<
