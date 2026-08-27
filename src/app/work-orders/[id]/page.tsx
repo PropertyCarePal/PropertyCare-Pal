@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import AppLayout from "@/components/AppLayout";
 
 type WorkOrder = {
     organization_id: string;
@@ -80,9 +81,9 @@ export default function WorkOrderDetailPage() {
           : null,
         completion_notes: editCompletionNotes,
         completed_at:
-  editStatus === "Completed"
-    ? workOrder.completed_at || new Date().toISOString()
-    : null,
+        editStatus === "Completed"
+          ? workOrder?.completed_at || new Date().toISOString()
+          : null,
       })
       .eq("id", String(params.id))
       .select()
@@ -482,7 +483,8 @@ if (attachmentError) {
   }
 
   return (
-    <div className="space-y-6">
+    <AppLayout>
+      <div className="space-y-6">
     {editing && (
   <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
     <div className="flex items-center justify-between">
@@ -974,6 +976,7 @@ activity.description?.toLowerCase().includes("closed") ? (
           </p>
         )}
       </div>
-    </div>
+      </div>
+  </AppLayout>
   );
 }

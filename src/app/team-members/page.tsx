@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import AppLayout from "@/components/AppLayout";
 
 type TeamMember = {
   id: string;
@@ -97,7 +98,8 @@ if (workOrderError) {
   }
 
   return (
-    <div className="p-8">
+    <AppLayout>
+    <div className="max-w-7xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
           Team Members
@@ -233,8 +235,9 @@ if (workOrderError) {
             </div>
                         );
                     })}
-        </div>
+            </div>
       )}
     </div>
+  </AppLayout>
   );
 }

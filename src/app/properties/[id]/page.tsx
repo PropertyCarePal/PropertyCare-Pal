@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import AppLayout from "@/components/AppLayout";
 
 type Property = {
   id: string;
@@ -58,6 +59,7 @@ const [propertyAccess, setPropertyAccess] =
   useState<PropertyAccess | null>(null);
 
 const [editingAccess, setEditingAccess] = useState(false);
+const [showPrivateAccess, setShowPrivateAccess] = useState(false);
 const [gateCode, setGateCode] = useState("");
 const [alarmInformation, setAlarmInformation] = useState("");
 const [lockboxCode, setLockboxCode] = useState("");
@@ -512,7 +514,8 @@ const { data: workOrderData, error: workOrderError } = await supabase
   }
 
   return (
-    <div className="p-8">
+    <AppLayout>
+      <div className="p-8">
 
       <header className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900">
@@ -801,6 +804,15 @@ const { data: workOrderData, error: workOrderError } = await supabase
         Sensitive access information for authorized team members.
       </p>
     </div>
+    {propertyAccess && (
+  <button
+    type="button"
+    onClick={() => setShowPrivateAccess((current) => !current)}
+    className="mr-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+  >
+    {showPrivateAccess ? "Hide Access" : "Show Access"}
+  </button>
+)} 
 
     <button
       type="button"
@@ -825,8 +837,12 @@ const { data: workOrderData, error: workOrderError } = await supabase
           Gate / Entry Code
         </p>
         <p className="mt-1 font-mono text-gray-900">
-          {propertyAccess.gate_code || "Not provided"}
-        </p>
+  {showPrivateAccess
+    ? propertyAccess.gate_code || "Not provided"
+    : propertyAccess.gate_code
+      ? "••••••••"
+      : "Not provided"}
+</p>
       </div>
 
       <div>
@@ -834,8 +850,12 @@ const { data: workOrderData, error: workOrderError } = await supabase
           Alarm Information
         </p>
         <p className="mt-1 whitespace-pre-wrap font-mono text-gray-900">
-          {propertyAccess.alarm_information || "Not provided"}
-        </p>
+  {showPrivateAccess
+    ? propertyAccess.alarm_information || "Not provided"
+    : propertyAccess.alarm_information
+      ? "••••••••••••"
+      : "Not provided"}
+</p>
       </div>
 
       <div>
@@ -843,8 +863,12 @@ const { data: workOrderData, error: workOrderError } = await supabase
           Lockbox Code
         </p>
         <p className="mt-1 font-mono text-gray-900">
-          {propertyAccess.lockbox_code || "Not provided"}
-        </p>
+  {showPrivateAccess
+    ? propertyAccess.lockbox_code || "Not provided"
+    : propertyAccess.lockbox_code
+      ? "••••••••"
+      : "Not provided"}
+</p> 
       </div>
 
       <div>
@@ -852,8 +876,12 @@ const { data: workOrderData, error: workOrderError } = await supabase
           Access Instructions
         </p>
         <p className="mt-1 whitespace-pre-wrap text-gray-900">
-          {propertyAccess.access_instructions || "Not provided"}
-        </p>
+  {showPrivateAccess
+    ? propertyAccess.access_instructions || "Not provided"
+    : propertyAccess.access_instructions
+      ? "••••••••••••"
+      : "Not provided"}
+</p>
       </div>
 
       <div className="md:col-span-2">
@@ -861,7 +889,11 @@ const { data: workOrderData, error: workOrderError } = await supabase
           Private Notes
         </p>
         <p className="mt-1 whitespace-pre-wrap text-gray-900">
-          {propertyAccess.private_notes || "No private notes"}
+        {showPrivateAccess
+  ? propertyAccess.private_notes || "No private notes"
+  : propertyAccess.private_notes
+    ? "••••••••••••"
+    : "No private notes"}
         </p>
       </div>
     </div>
@@ -1417,7 +1449,7 @@ const { data: workOrderData, error: workOrderError } = await supabase
         </div>
       )}
 
-    </div>
+</div>
+  </AppLayout>
   );
 }
-

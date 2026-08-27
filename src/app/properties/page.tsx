@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import AppLayout from "@/components/AppLayout";
 
 type Property = {
   id: string;
@@ -129,7 +130,8 @@ ${error.code}`
   }
 
   return (
-    <div className="p-8">
+    <AppLayout>
+      <div className="max-w-7xl mx-auto">
       <header className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900">
           Properties
@@ -236,7 +238,8 @@ ${error.code}`
             </Link>
           ))}
         </div>
-      )}
-    </div>
-  );
-}
+           )}
+           </div>
+         </AppLayout>
+   );
+ }

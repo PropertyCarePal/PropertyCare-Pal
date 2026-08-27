@@ -1,4 +1,7 @@
+"use client";
+import { useRouter } from "next/navigation";
 export default function Sidebar() {
+  const router = useRouter();
   const navigation = [
     "Dashboard",
     "Properties",
@@ -23,14 +26,19 @@ export default function Sidebar() {
       </div>
 
       <nav className="space-y-2">
-        {navigation.map((item) => (
-          <div
-            key={item}
-            className="px-4 py-3 rounded-lg hover:bg-gray-100 cursor-pointer"
-          >
-            {item}
-          </div>
-        ))}
+      {navigation.map((item) => (
+  <div
+    key={item}
+    onClick={() => {
+      if (item === "Dashboard") {
+        router.push("/");
+      }
+    }}
+    className="px-4 py-3 rounded-lg hover:bg-gray-100 cursor-pointer"
+  >
+    {item}
+  </div>
+))}
       </nav>
     </aside>
   );

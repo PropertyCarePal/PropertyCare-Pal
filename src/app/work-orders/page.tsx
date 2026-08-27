@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import AppLayout from "@/components/AppLayout";
 
 type WorkOrder = {
   id: string;
@@ -32,7 +33,7 @@ type TeamMember = {
   full_name: string | null;
   role: string | null;
 };
-export default function WorkOrdersPage() {
+function WorkOrdersContent() {
   const { user, loading } = useAuth();
   const searchParams = useSearchParams();
 const assignedUserFromUrl = searchParams.get("assignedUser");
@@ -315,9 +316,10 @@ const statusFromUrl = searchParams.get("status");
   }
 
   return (
-    <div>
+    <AppLayout>
+      <div className="max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-gray-900">
           Work Orders
         </h1>
 
@@ -864,8 +866,8 @@ setShowDueThisWeek(false);
     };
 
     return (
-      (priorityOrder[b.priority] || 0) -
-      (priorityOrder[a.priority] || 0)
+      (priorityOrder[b.priority ?? ""] || 0) -
+      (priorityOrder[a.priority ?? ""] || 0)
     );
   }
 
@@ -878,8 +880,8 @@ setShowDueThisWeek(false);
     };
 
     return (
-      (priorityOrder[a.priority] || 0) -
-      (priorityOrder[b.priority] || 0)
+      (priorityOrder[a.priority ?? ""] || 0) -
+      (priorityOrder[b.priority ?? ""] || 0)
     );
   }
 
@@ -1058,6 +1060,20 @@ setShowDueThisWeek(false);
           ))}
         </div>
       )}
-    </div>
+     </div>
+  </AppLayout>
+  );
+}
+export default function WorkOrdersPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          Loading work orders...
+        </div>
+      }
+    >
+      <WorkOrdersContent />
+    </Suspense>
   );
 }
