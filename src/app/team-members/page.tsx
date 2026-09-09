@@ -10,6 +10,7 @@ type TeamMember = {
   id: string;
   full_name: string | null;
   role: string | null;
+  calendar_color: string | null;
 };
 type WorkOrder = {
     id: string;
@@ -26,6 +27,16 @@ export default function TeamMembersPage() {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [error, setError] = useState("");
+  const calendarColors = [
+    "blue",
+    "purple",
+    "orange",
+    "pink",
+    "cyan",
+    "indigo",
+    "teal",
+    "rose",
+  ];
 
   useEffect(() => {
     const loadTeamMembers = async () => {
@@ -49,7 +60,7 @@ export default function TeamMembersPage() {
 
       const { data, error: teamError } = await supabase
         .from("profiles")
-        .select("id, full_name, role")
+        .select("id, full_name, role, calendar_color")
         .eq("organization_id", profile.organization_id)
         .order("full_name", { ascending: true });
         const { data: workOrderData, error: workOrderError } = await supabase

@@ -8,6 +8,7 @@ type TeamMember = {
   id: string;
   full_name: string | null;
   role: string | null;
+  calendar_color: string | null;
 };
 type WorkOrder = {
     id: string;
@@ -27,8 +28,9 @@ export default function TeamMemberDetailsPage() {
   const [error, setError] = useState("");
   const [editing, setEditing] = useState(false);
   const [editFullName, setEditFullName] = useState("");
-  const [editRole, setEditRole] = useState("");
-  const [saving, setSaving] = useState(false); 
+const [editRole, setEditRole] = useState("");
+const [editCalendarColor, setEditCalendarColor] = useState("");
+const [saving, setSaving] = useState(false);
   const activeCount = workOrders.filter(
     (workOrder) =>
       workOrder.status === "Open" ||
@@ -62,9 +64,10 @@ export default function TeamMemberDetailsPage() {
       .update({
         full_name: editFullName.trim(),
         role: editRole.trim() || null,
+        calendar_color: editCalendarColor || null,
       })
       .eq("id", id)
-      .select("id, full_name, role")
+      .select("id, full_name, role, calendar_color")
       .single();
   
     if (error) {
@@ -82,7 +85,7 @@ export default function TeamMemberDetailsPage() {
     async function loadTeamMember() {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, role")
+        .select("id, full_name, role, calendar_color")
         .eq("id", id)
         .single();
         const { data: workOrderData, error: workOrderError } = await supabase
@@ -150,6 +153,7 @@ if (workOrderError) {
   onClick={() => {
     setEditFullName(member.full_name || "");
     setEditRole(member.role || "");
+    setEditCalendarColor(member.calendar_color || "");
     setEditing(true);
   }}
   className="mt-4 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
@@ -195,6 +199,31 @@ if (workOrderError) {
         className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
       />
     </div>
+    <div className="mt-4">
+  <label
+    htmlFor="editCalendarColor"
+    className="block text-sm font-medium text-gray-700"
+  >
+    Calendar Color
+  </label>
+
+  <select
+    id="editCalendarColor"
+    value={editCalendarColor}
+    onChange={(e) => setEditCalendarColor(e.target.value)}
+    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
+  >
+    <option value="">Select a color</option>
+    <option value="blue">Blue</option>
+    <option value="purple">Purple</option>
+    <option value="orange">Orange</option>
+    <option value="pink">Pink</option>
+    <option value="cyan">Cyan</option>
+    <option value="indigo">Indigo</option>
+    <option value="teal">Teal</option>
+    <option value="rose">Rose</option>
+  </select>
+</div>
 
     <div className="mt-6 flex gap-3">
       <button

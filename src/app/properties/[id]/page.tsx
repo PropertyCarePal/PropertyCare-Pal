@@ -82,33 +82,43 @@ const [loadingContact, setLoadingContact] = useState(true);
   const [assetNotes, setAssetNotes] = useState("");
   const [workOrders, setWorkOrders] = useState<any[]>([]);
   const [teamMembers, setTeamMembers] = useState<
-  { id: string; full_name: string | null; role: string | null }[]
+  {
+    id: string;
+    full_name: string | null;
+    role: string | null;
+    calendar_color: string | null;
+  }[]
 >([]);
   const [calendarDate, setCalendarDate] = useState(new Date());
-  const teamMemberColors = [
-    "bg-blue-600 hover:bg-blue-700",
-    "bg-purple-600 hover:bg-purple-700",
-    "bg-orange-500 hover:bg-orange-600",
-    "bg-pink-600 hover:bg-pink-700",
-    "bg-cyan-600 hover:bg-cyan-700",
-    "bg-indigo-600 hover:bg-indigo-700",
-    "bg-teal-600 hover:bg-teal-700",
-    "bg-rose-600 hover:bg-rose-700",
-  ];
+  const teamMemberColors: Record<string, string> = {
+    blue: "bg-blue-600 hover:bg-blue-700",
+    purple: "bg-purple-600 hover:bg-purple-700",
+    orange: "bg-orange-500 hover:bg-orange-600",
+    pink: "bg-pink-600 hover:bg-pink-700",
+    cyan: "bg-cyan-600 hover:bg-cyan-700",
+    indigo: "bg-indigo-600 hover:bg-indigo-700",
+    teal: "bg-teal-600 hover:bg-teal-700",
+    rose: "bg-rose-600 hover:bg-rose-700",
+  };
   
   function getTeamMemberColor(userId: string | null) {
     if (!userId) {
       return "bg-emerald-600 hover:bg-emerald-700";
     }
   
-    const index = teamMembers.findIndex((member) => member.id === userId);
+    const member = teamMembers.find((member) => member.id === userId);
   
-    if (index === -1) {
+    if (!member?.calendar_color) {
       return "bg-emerald-600 hover:bg-emerald-700";
     }
   
-    return teamMemberColors[index % teamMemberColors.length];
-  } 
+    return (
+      teamMemberColors[member.calendar_color] ??
+      "bg-emerald-600 hover:bg-emerald-700"
+    );
+  }
+  
+    
   function getCalendarDays(date: Date) {
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -553,7 +563,7 @@ useEffect(() => {
       }
       const { data: teamMemberData, error: teamMemberError } = await supabase
       .from("profiles")
-      .select("id, full_name, role")
+      .select("id, full_name, role, calendar_color")
       .eq("organization_id", profile.organization_id)
       .order("full_name", { ascending: true });
     
