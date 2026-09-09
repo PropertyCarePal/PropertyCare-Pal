@@ -81,6 +81,74 @@ const [loadingContact, setLoadingContact] = useState(true);
   const [assetInstallDate, setAssetInstallDate] = useState("");
   const [assetNotes, setAssetNotes] = useState("");
   const [workOrders, setWorkOrders] = useState<any[]>([]);
+  const [teamMembers, setTeamMembers] = useState<
+  { id: string; full_name: string | null; role: string | null }[]
+>([]);
+  const [calendarDate, setCalendarDate] = useState(new Date());
+  const teamMemberColors = [
+    "bg-blue-600 hover:bg-blue-700",
+    "bg-purple-600 hover:bg-purple-700",
+    "bg-orange-500 hover:bg-orange-600",
+    "bg-pink-600 hover:bg-pink-700",
+    "bg-cyan-600 hover:bg-cyan-700",
+    "bg-indigo-600 hover:bg-indigo-700",
+    "bg-teal-600 hover:bg-teal-700",
+    "bg-rose-600 hover:bg-rose-700",
+  ];
+  
+  function getTeamMemberColor(userId: string | null) {
+    if (!userId) {
+      return "bg-emerald-600 hover:bg-emerald-700";
+    }
+  
+    const index = teamMembers.findIndex((member) => member.id === userId);
+  
+    if (index === -1) {
+      return "bg-emerald-600 hover:bg-emerald-700";
+    }
+  
+    return teamMemberColors[index % teamMemberColors.length];
+  } 
+  function getCalendarDays(date: Date) {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+  
+    const firstDay = new Date(year, month, 1);
+    const startDay = firstDay.getDay();
+  
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+  
+    const days: (Date | null)[] = [];
+  
+    for (let i = 0; i < startDay; i++) {
+      days.push(null);
+    }
+  
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(new Date(year, month, day));
+    }
+  
+    while (days.length % 7 !== 0) {
+      days.push(null);
+    }
+  
+    return days;
+  }
+  
+  function formatCalendarMonth(date: Date) {
+    return date.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+  }
+  
+  function formatCalendarDate(date: Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+  
+    return `${year}-${month}-${day}`;
+  } 
   const [showWorkOrderForm, setShowWorkOrderForm] = useState(false);
 const [workOrderTitle, setWorkOrderTitle] = useState("");
 const [workOrderPriority, setWorkOrderPriority] = useState("Medium"); 
@@ -88,6 +156,7 @@ const [workOrderDescription, setWorkOrderDescription] = useState("");
 const [workOrderDueDate, setWorkOrderDueDate] = useState("");
 const [workOrderStatus, setWorkOrderStatus] = useState("Open");
 const [workOrderAssignedTo, setWorkOrderAssignedTo] = useState("");
+const [workOrderAssignedUserId, setWorkOrderAssignedUserId] = useState("");
 const [workOrderEstimatedCost, setWorkOrderEstimatedCost] = useState("");
 const [workOrderActualCost, setWorkOrderActualCost] = useState("");
 const [workOrderCompletionNotes, setWorkOrderCompletionNotes] = useState("");
@@ -108,6 +177,7 @@ const [editingWorkOrderId, setEditingWorkOrderId] = useState<string | null>(null
       alert("Unable to find your organization.");
       return;
     }
+
     
     console.log("ASSET INSERT DATA:", {
         organization_id: profile.organization_id,
@@ -169,6 +239,7 @@ function editWorkOrder(workOrder: any) {
     setWorkOrderDueDate(workOrder.due_date || "");
     setWorkOrderStatus(workOrder.status || "Open");
     setWorkOrderAssignedTo(workOrder.assigned_to || "");
+    setWorkOrderAssignedUserId(workOrder.assigned_user_id || "");
   
     setWorkOrderEstimatedCost(
       workOrder.estimated_cost !== null &&
@@ -188,6 +259,37 @@ function editWorkOrder(workOrder: any) {
   
     setShowWorkOrderForm(true);
   }
+  async function deleteWorkOrder() {
+    if (!editingWorkOrderId) return;
+  
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this work order? This cannot be undone."
+    );
+  
+    if (!confirmed) return;
+  
+    const { error } = await supabase
+      .from("work_orders")
+      .delete()
+      .eq("id", editingWorkOrderId);
+  
+    if (error) {
+      console.error("WORK ORDER DELETE ERROR:", error);
+      alert(`Unable to delete work order.\n\n${error.message}`);
+      return;
+    }
+  
+    setWorkOrders((current) =>
+      current.filter(
+        (workOrder) => workOrder.id !== editingWorkOrderId
+      )
+    );
+  
+    setEditingWorkOrderId(null);
+    setShowWorkOrderForm(false);
+  
+    alert("Work order deleted successfully.");
+  }
 async function addWorkOrder() {
   if (!user || !params.id) return;
 
@@ -203,9 +305,7 @@ async function addWorkOrder() {
     return;
   }
   
-  const { data, error } = await supabase
-  .from("work_orders")
-  .insert({
+  const workOrderData = {
     organization_id: profile.organization_id,
     property_id: String(params.id),
     title: workOrderTitle,
@@ -213,7 +313,7 @@ async function addWorkOrder() {
     priority: workOrderPriority,
     due_date: workOrderDueDate || null,
     status: workOrderStatus,
-    assigned_to: workOrderAssignedTo,
+    assigned_user_id: workOrderAssignedUserId || null,
     estimated_cost: workOrderEstimatedCost
       ? Number(workOrderEstimatedCost)
       : null,
@@ -222,12 +322,34 @@ async function addWorkOrder() {
       : null,
     completion_notes: workOrderCompletionNotes,
     completed_at:
-    workOrderStatus === "Completed"
-      ? new Date().toISOString()
-      : null,
-  })
-  .select()
-  .single();
+      workOrderStatus === "Completed"
+        ? new Date().toISOString()
+        : null,
+  };
+
+  let data;
+  let error;
+
+  if (editingWorkOrderId) {
+    const result = await supabase
+      .from("work_orders")
+      .update(workOrderData)
+      .eq("id", editingWorkOrderId)
+      .select()
+      .single();
+
+    data = result.data;
+    error = result.error;
+  } else {
+    const result = await supabase
+      .from("work_orders")
+      .insert(workOrderData)
+      .select()
+      .single();
+
+    data = result.data;
+    error = result.error;
+  }
 
 console.log("SAVED WORK ORDER:", data);
 console.log("SAVED COMPLETED AT:", data?.completed_at);
@@ -240,13 +362,22 @@ console.log("SAVED COMPLETED AT:", data?.completed_at);
 
   console.log("WORK ORDER SAVED:", data);
 
-  setWorkOrders((current) => [data, ...current]);
+  setWorkOrders((current) => {
+    if (editingWorkOrderId) {
+      return current.map((workOrder) =>
+        workOrder.id === editingWorkOrderId ? data : workOrder
+      );
+    }
+  
+    return [data, ...current];
+  });
 
   setWorkOrderTitle("");
   setWorkOrderDescription("");
   setWorkOrderPriority("Medium");
   setWorkOrderDueDate("");
   setWorkOrderStatus("Open"); 
+  setEditingWorkOrderId(null);
   setShowWorkOrderForm(false);
 
   alert("Work order saved successfully.");
@@ -420,7 +551,18 @@ useEffect(() => {
         setLoadingProperty(false);
         return;
       }
-
+      const { data: teamMemberData, error: teamMemberError } = await supabase
+      .from("profiles")
+      .select("id, full_name, role")
+      .eq("organization_id", profile.organization_id)
+      .order("full_name", { ascending: true });
+    
+    if (teamMemberError) {
+      console.error("TEAM MEMBERS LOAD ERROR:", teamMemberError);
+    } else {
+      console.log("TEAM MEMBERS LOADED:", teamMemberData);
+      setTeamMembers(teamMemberData || []);
+    }
       const { data, error } = await supabase
         .from("properties")
         .select("*")
@@ -478,7 +620,14 @@ if (accessError) {
 
 const { data: workOrderData, error: workOrderError } = await supabase
       .from("work_orders")
-      .select("*")
+      .select(`
+        *,
+        assigned_user:profiles!work_orders_assigned_user_id_fkey (
+          id,
+          full_name,
+          role
+        )
+      `)
       .eq("property_id", String(params.id))
       .eq("organization_id", profile.organization_id)
       .order("created_at", { ascending: false });
@@ -1189,7 +1338,7 @@ const { data: workOrderData, error: workOrderError } = await supabase
 
 {activeTab === "Work Orders" && (
   <div className="rounded-xl bg-white p-8 shadow">
- <div className="flex items-center justify-between">
+<div className="flex items-center justify-between">
   <div>
     <h2 className="text-2xl font-semibold text-gray-900">
       Work Orders
@@ -1206,7 +1355,157 @@ const { data: workOrderData, error: workOrderError } = await supabase
   >
     {showWorkOrderForm ? "Cancel" : "Add Work Order"}
   </button>
-</div> 
+</div>
+
+{/* Property Work Order Calendar */}
+<div className="mt-8 rounded-xl border border-gray-200 bg-white p-6">
+  <div className="flex items-center justify-between">
+    <button
+      type="button"
+      onClick={() =>
+        setCalendarDate(
+          new Date(
+            calendarDate.getFullYear(),
+            calendarDate.getMonth() - 1,
+            1
+          )
+        )
+      }
+      className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+    >
+      ← Previous
+    </button>
+
+    <div className="text-center">
+      <h3 className="text-xl font-semibold text-gray-900">
+        {formatCalendarMonth(calendarDate)}
+      </h3>
+      <p className="mt-1 text-sm text-gray-500">
+        Scheduled property work
+      </p>
+    </div>
+
+    <button
+      type="button"
+      onClick={() =>
+        setCalendarDate(
+          new Date(
+            calendarDate.getFullYear(),
+            calendarDate.getMonth() + 1,
+            1
+          )
+        )
+      }
+      className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+    >
+      Next →
+    </button>
+  </div>
+
+  <div className="mt-6 grid grid-cols-7 border-l border-t border-gray-200">
+    {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+      (day) => (
+        <div
+          key={day}
+          className="border-b border-r border-gray-200 bg-gray-50 p-3 text-center text-sm font-semibold text-gray-600"
+        >
+          {day}
+        </div>
+      )
+    )}
+
+    {getCalendarDays(calendarDate).map((day, index) => {
+      if (!day) {
+        return (
+          <div
+            key={`empty-${index}`}
+            className="min-h-[120px] border-b border-r border-gray-200 bg-gray-50"
+          />
+        );
+      }
+
+      const dateString = formatCalendarDate(day);
+
+      const dayWorkOrders = workOrders.filter(
+        (workOrder) => workOrder.due_date === dateString
+      );
+
+      const isToday =
+        formatCalendarDate(new Date()) === dateString;
+
+      return (
+        <div
+          key={dateString}
+          className={
+            "min-h-[120px] border-b border-r border-gray-200 p-2 " +
+            (isToday ? "bg-emerald-50" : "bg-white")
+          }
+        >
+          <div
+            className={
+              "mb-2 text-sm font-semibold " +
+              (isToday
+                ? "text-emerald-700"
+                : "text-gray-700")
+            }
+          >
+            {day.getDate()}
+          </div>
+
+          <div className="space-y-1">
+            {dayWorkOrders.map((workOrder) => {
+              const completed =
+                workOrder.status === "Completed";
+
+              const cancelled =
+                workOrder.status === "Cancelled";
+
+              return (
+                <Link
+                  key={workOrder.id}
+                  href={`/work-orders/${workOrder.id}`}
+                  className={
+                    "block rounded-md px-2 py-1 text-xs font-semibold transition " +
+                    (completed
+                      ? "bg-gray-200 text-gray-500 line-through"
+                      : cancelled
+                        ? "bg-gray-100 text-gray-400 line-through"
+                        : `${getTeamMemberColor(workOrder.assigned_user_id)} text-white`)
+                  }
+                >
+                  {workOrder.title}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      );
+    })}
+  </div>
+
+  <div className="mt-4 flex flex-wrap gap-4 text-sm">
+    <div className="flex items-center gap-2">
+      <span className="h-3 w-3 rounded bg-emerald-600" />
+      <span className="text-gray-600">
+        Scheduled / Active
+      </span>
+    </div>
+
+    <div className="flex items-center gap-2">
+      <span className="h-3 w-3 rounded bg-gray-200" />
+      <span className="text-gray-600">
+        Completed
+      </span>
+    </div>
+
+    <div className="flex items-center gap-2">
+      <span className="h-3 w-3 rounded bg-gray-100" />
+      <span className="text-gray-600">
+        Cancelled
+      </span>
+    </div>
+  </div>
+</div>
 {showWorkOrderForm && (
   <div className="mt-6 rounded-xl border border-gray-200 p-6">
     <h3 className="text-xl font-semibold text-gray-900">
@@ -1259,13 +1558,20 @@ const { data: workOrderData, error: workOrderError } = await supabase
     Assigned To
   </label>
 
-  <input
-    type="text"
-    value={workOrderAssignedTo}
-    onChange={(e) => setWorkOrderAssignedTo(e.target.value)}
-    placeholder="Contractor or vendor name"
+  <select
+    value={workOrderAssignedUserId}
+    onChange={(e) => setWorkOrderAssignedUserId(e.target.value)}
     className="mt-1 w-full rounded-lg border border-gray-300 p-3"
-  />
+  >
+    <option value="">Unassigned</option>
+
+    {teamMembers.map((member) => (
+      <option key={member.id} value={member.id}>
+        {member.full_name || "Unnamed Team Member"}
+        {member.role ? ` — ${member.role}` : ""}
+      </option>
+    ))}
+  </select>
 </div>
 <div className="mt-4">
   <label className="block text-sm font-medium text-gray-700">
@@ -1318,6 +1624,15 @@ const { data: workOrderData, error: workOrderError } = await supabase
 >
   Save Work Order
 </button>
+{editingWorkOrderId && (
+    <button
+      type="button"
+      onClick={deleteWorkOrder}
+      className="mt-5 ml-3 rounded-lg bg-red-600 px-5 py-3 text-white hover:bg-red-700"
+    >
+      Delete Work Order
+    </button>
+  )}
  
 
     </div>
@@ -1380,9 +1695,9 @@ const { data: workOrderData, error: workOrderError } = await supabase
   </div>
 )}
             <div className="mt-3 flex gap-4 text-sm text-gray-500">
-            {workOrder.assigned_to && (
+            {workOrder.assigned_user && (
   <span>
-    Assigned To: {workOrder.assigned_to}
+    Assigned To: {workOrder.assigned_user.full_name || "Unnamed Team Member"}
   </span>
 )}
               <span>
