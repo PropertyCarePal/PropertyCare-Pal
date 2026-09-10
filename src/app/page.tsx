@@ -231,6 +231,20 @@ setLoadingWorkOrders(false);
   const lowPriorityWorkOrders = activeWorkOrders.filter(
     (workOrder) => workOrder.priority === "Low"
   );
+  const recentMaintenanceWorkOrders = workOrders
+  .filter((workOrder) => workOrder.status === "Completed")
+  .sort((a, b) => {
+    const dateA = a.completed_at
+      ? new Date(a.completed_at).getTime()
+      : 0;
+
+    const dateB = b.completed_at
+      ? new Date(b.completed_at).getTime()
+      : 0;
+
+    return dateB - dateA;
+  })
+  .slice(0, 8);
   
   const overdueWorkOrders = activeWorkOrders.filter((workOrder) => {
     if (!workOrder.due_date) return false;
@@ -473,6 +487,47 @@ setLoadingWorkOrders(false);
     </button>
   </div>
 </section> 
+<section className="mt-8">
+  <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+    Recent Maintenance Activity
+  </h2>
+
+  <div className="rounded-xl bg-white p-6 shadow">
+    {recentMaintenanceWorkOrders.length === 0 ? (
+      <p className="text-sm text-gray-500">
+        No completed maintenance activity yet.
+      </p>
+    ) : (
+      <div className="space-y-3">
+        {recentMaintenanceWorkOrders.map((workOrder) => (
+          <button
+            key={workOrder.id}
+            type="button"
+            onClick={() =>
+              router.push(`/work-orders/${workOrder.id}`)
+            }
+            className="flex w-full items-center justify-between gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 text-left transition hover:bg-gray-100"
+          >
+            <div className="min-w-0">
+              <p className="truncate font-semibold text-gray-900">
+                {workOrder.title}
+              </p>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Completed{" "}
+                {formatCompletedDate(workOrder.completed_at)}
+              </p>
+            </div>
+
+            <span className="shrink-0 text-sm font-medium text-blue-600">
+              View →
+            </span>
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+</section>
         <section className="mt-8">
   <h2 className="mb-4 text-2xl font-semibold text-gray-900">
     Property Activity
