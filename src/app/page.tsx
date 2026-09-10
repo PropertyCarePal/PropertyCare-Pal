@@ -245,6 +245,15 @@ setLoadingWorkOrders(false);
     return dateB - dateA;
   })
   .slice(0, 8);
+  const upcomingMaintenanceByDate = activeWorkOrders
+  .filter((workOrder) => workOrder.due_date)
+  .sort((a, b) => {
+    const dateA = new Date(`${a.due_date}T00:00:00`).getTime();
+    const dateB = new Date(`${b.due_date}T00:00:00`).getTime();
+
+    return dateA - dateB;
+  })
+  .slice(0, 7);
   
   const overdueWorkOrders = activeWorkOrders.filter((workOrder) => {
     if (!workOrder.due_date) return false;
@@ -522,6 +531,46 @@ setLoadingWorkOrders(false);
             <span className="shrink-0 text-sm font-medium text-blue-600">
               View →
             </span>
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+</section>
+<section className="mt-8">
+  <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+    Upcoming Maintenance Calendar
+  </h2>
+
+  <div className="rounded-xl bg-white p-6 shadow">
+    {upcomingMaintenanceByDate.length === 0 ? (
+      <p className="text-sm text-gray-500">
+        No upcoming maintenance scheduled.
+      </p>
+    ) : (
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        {upcomingMaintenanceByDate.map((workOrder) => (
+          <button
+            key={workOrder.id}
+            type="button"
+            onClick={() =>
+              router.push(`/work-orders/${workOrder.id}`)
+            }
+            className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-left transition hover:bg-gray-100"
+          >
+            <p className="font-semibold text-gray-900">
+              {workOrder.title}
+            </p>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Due {formatDate(workOrder.due_date)}
+            </p>
+
+            {workOrder.priority && (
+              <span className="mt-3 inline-block rounded-full bg-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-700">
+                {workOrder.priority}
+              </span>
+            )}
           </button>
         ))}
       </div>
