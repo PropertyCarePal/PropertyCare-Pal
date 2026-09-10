@@ -254,6 +254,32 @@ setLoadingWorkOrders(false);
     return dateA - dateB;
   })
   .slice(0, 7);
+  const overdueMaintenance = activeWorkOrders.filter((workOrder) => {
+  if (!workOrder.due_date) {
+    return false;
+  }
+
+  const dueDate = new Date(`${workOrder.due_date}T00:00:00`);
+
+  return dueDate < today;
+});
+
+const highPriorityMaintenance = activeWorkOrders.filter(
+  (workOrder) => workOrder.priority === "High"
+);
+
+const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
+  if (!workOrder.due_date) {
+    return false;
+  }
+
+  const dueDate = new Date(`${workOrder.due_date}T00:00:00`);
+
+  const sevenDaysFromNow = new Date(today);
+  sevenDaysFromNow.setDate(today.getDate() + 7);
+
+  return dueDate >= today && dueDate <= sevenDaysFromNow;
+});
   
   const overdueWorkOrders = activeWorkOrders.filter((workOrder) => {
     if (!workOrder.due_date) return false;
@@ -349,7 +375,73 @@ setLoadingWorkOrders(false);
             </p>
           </div>
         </section>
-        
+        <section className="mt-8">
+  <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+    Maintenance Attention
+  </h2>
+
+  <div className="grid gap-4 md:grid-cols-3">
+    <button
+      type="button"
+      onClick={() => router.push("/work-orders")}
+      className="rounded-xl bg-white p-5 text-left shadow transition hover:shadow-md"
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold text-red-700">
+          Overdue
+        </h3>
+
+        <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-700">
+          {overdueMaintenance.length}
+        </span>
+      </div>
+
+      <p className="mt-3 text-sm text-gray-500">
+        Active maintenance items past their due date
+      </p>
+    </button>
+
+    <button
+      type="button"
+      onClick={() => router.push("/work-orders")}
+      className="rounded-xl bg-white p-5 text-left shadow transition hover:shadow-md"
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold text-orange-700">
+          High Priority
+        </h3>
+
+        <span className="rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-700">
+          {highPriorityMaintenance.length}
+        </span>
+      </div>
+
+      <p className="mt-3 text-sm text-gray-500">
+        Active high-priority maintenance items
+      </p>
+    </button>
+
+    <button
+      type="button"
+      onClick={() => router.push("/work-orders")}
+      className="rounded-xl bg-white p-5 text-left shadow transition hover:shadow-md"
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold text-yellow-700">
+          Due Soon
+        </h3>
+
+        <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-semibold text-yellow-700">
+          {dueSoonMaintenance.length}
+        </span>
+      </div>
+
+      <p className="mt-3 text-sm text-gray-500">
+        Active maintenance due within 7 days
+      </p>
+    </button>
+  </div>
+</section>
         <section className="mt-8">
           <h2 className="mb-4 text-2xl font-semibold text-gray-900">
             Maintenance Status
@@ -429,73 +521,7 @@ setLoadingWorkOrders(false);
             </button>
           </div>
         </section>
-        <section className="mt-8">
-  <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-    Maintenance Priorities
-  </h2>
-
-  <div className="grid gap-4 md:grid-cols-3">
-    <button
-      type="button"
-      onClick={() => router.push("/work-orders")}
-      className="rounded-xl bg-white p-6 text-left shadow transition hover:shadow-md"
-    >
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-red-700">
-          High Priority
-        </h3>
-
-        <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-700">
-          {highPriorityWorkOrders.length}
-        </span>
-      </div>
-
-      <p className="mt-4 text-sm text-gray-500">
-        Active high-priority maintenance items
-      </p>
-    </button>
-
-    <button
-      type="button"
-      onClick={() => router.push("/work-orders")}
-      className="rounded-xl bg-white p-6 text-left shadow transition hover:shadow-md"
-    >
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-orange-700">
-          Medium Priority
-        </h3>
-
-        <span className="rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-700">
-          {mediumPriorityWorkOrders.length}
-        </span>
-      </div>
-
-      <p className="mt-4 text-sm text-gray-500">
-        Active medium-priority maintenance items
-      </p>
-    </button>
-
-    <button
-      type="button"
-      onClick={() => router.push("/work-orders")}
-      className="rounded-xl bg-white p-6 text-left shadow transition hover:shadow-md"
-    >
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-blue-700">
-          Low Priority
-        </h3>
-
-        <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
-          {lowPriorityWorkOrders.length}
-        </span>
-      </div>
-
-      <p className="mt-4 text-sm text-gray-500">
-        Active low-priority maintenance items
-      </p>
-    </button>
-  </div>
-</section> 
+      
 <section className="mt-8">
   <h2 className="mb-4 text-2xl font-semibold text-gray-900">
     Recent Maintenance Activity
@@ -629,228 +655,8 @@ setLoadingWorkOrders(false);
     </div>
   )}
 </section>
-<section className="mt-8">
-  <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-    Upcoming Maintenance
-  </h2>
 
-  {loadingWorkOrders ? (
-    <div className="rounded-xl bg-white p-6 shadow">
-      <p className="text-gray-500">
-        Loading upcoming maintenance...
-      </p>
-    </div>
-  ) : (
-    <div className="rounded-xl bg-white p-6 shadow">
-      {activeWorkOrders
-        .filter((workOrder) => workOrder.due_date)
-        .sort(
-          (a, b) =>
-            new Date(`${a.due_date}T00:00:00`).getTime() -
-            new Date(`${b.due_date}T00:00:00`).getTime()
-        )
-        .slice(0, 6)
-        .length === 0 ? (
-        <p className="text-sm text-gray-500">
-          No upcoming maintenance scheduled.
-        </p>
-      ) : (
-        <div className="space-y-3">
-          {activeWorkOrders
-            .filter((workOrder) => workOrder.due_date)
-            .sort(
-              (a, b) =>
-                new Date(`${a.due_date}T00:00:00`).getTime() -
-                new Date(`${b.due_date}T00:00:00`).getTime()
-            )
-            .slice(0, 6)
-            .map((workOrder) => (
-              <button
-                key={workOrder.id}
-                type="button"
-                onClick={() =>
-                  router.push(`/work-orders/${workOrder.id}`)
-                }
-                className="flex w-full items-center justify-between gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 text-left transition hover:bg-gray-100"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-gray-900">
-                    {workOrder.title}
-                  </p>
-
-                  <p className="mt-1 text-sm text-gray-500">
-                    Due {formatDate(workOrder.due_date)}
-                  </p>
-                </div>
-
-                <div className="flex shrink-0 items-center gap-2">
-                  {workOrder.priority && (
-                    <span className="rounded-full bg-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-700">
-                      {workOrder.priority}
-                    </span>
-                  )}
-
-                  <span className="text-sm font-medium text-blue-600">
-                    View →
-                  </span>
-                </div>
-              </button>
-            ))}
-        </div>
-      )}
-    </div>
-  )}
-</section>
-        <section className="mt-8">
-          <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-            Maintenance Overview
-          </h2>
-
-          {loadingWorkOrders ? (
-            <div className="rounded-xl bg-white p-6 shadow">
-              <p className="text-gray-500">
-                Loading maintenance activity...
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-6 lg:grid-cols-3">
-              <div className="rounded-xl bg-white p-6 shadow">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-red-700">
-                    Overdue
-                  </h3>
-
-                  <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-700">
-                    {overdueWorkOrders.length}
-                  </span>
-                </div>
-
-                <div className="mt-4 space-y-3">
-                  {overdueWorkOrders.length === 0 ? (
-                    <p className="text-sm text-gray-500">
-                      No overdue work orders.
-                    </p>
-                  ) : (
-                    overdueWorkOrders.slice(0, 5).map((workOrder) => (
-                      <button
-                        key={workOrder.id}
-                        type="button"
-                        onClick={() =>
-                          router.push(`/work-orders/${workOrder.id}`)
-                        }
-                        className="block w-full rounded-lg border border-red-100 bg-red-50 p-3 text-left hover:bg-red-100"
-                      >
-                        <p className="font-semibold text-gray-900">
-                          {workOrder.title}
-                        </p>
-
-                        <p className="mt-1 text-sm text-red-700">
-                          Due {formatDate(workOrder.due_date)}
-                        </p>
-
-                        {workOrder.priority && (
-                          <p className="mt-1 text-xs text-gray-500">
-                            Priority: {workOrder.priority}
-                          </p>
-                        )}
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              <div className="rounded-xl bg-white p-6 shadow">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-orange-700">
-                    Due Soon
-                  </h3>
-
-                  <span className="rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-700">
-                    {dueSoonWorkOrders.length}
-                  </span>
-                </div>
-
-                <div className="mt-4 space-y-3">
-                  {dueSoonWorkOrders.length === 0 ? (
-                    <p className="text-sm text-gray-500">
-                      Nothing due in the next 7 days.
-                    </p>
-                  ) : (
-                    dueSoonWorkOrders.slice(0, 5).map((workOrder) => (
-                      <button
-                        key={workOrder.id}
-                        type="button"
-                        onClick={() =>
-                          router.push(`/work-orders/${workOrder.id}`)
-                        }
-                        className="block w-full rounded-lg border border-orange-100 bg-orange-50 p-3 text-left hover:bg-orange-100"
-                      >
-                        <p className="font-semibold text-gray-900">
-                          {workOrder.title}
-                        </p>
-
-                        <p className="mt-1 text-sm text-orange-700">
-                          Due {formatDate(workOrder.due_date)}
-                        </p>
-
-                        {workOrder.priority && (
-                          <p className="mt-1 text-xs text-gray-500">
-                            Priority: {workOrder.priority}
-                          </p>
-                        )}
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              <div className="rounded-xl bg-white p-6 shadow">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-green-700">
-                    Recently Completed
-                  </h3>
-
-                  <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700">
-                    {recentlyCompletedWorkOrders.length}
-                  </span>
-                </div>
-
-                <div className="mt-4 space-y-3">
-                  {recentlyCompletedWorkOrders.length === 0 ? (
-                    <p className="text-sm text-gray-500">
-                      No work orders completed in the last 7 days.
-                    </p>
-                  ) : (
-                    recentlyCompletedWorkOrders
-                      .slice(0, 5)
-                      .map((workOrder) => (
-                        <button
-                          key={workOrder.id}
-                          type="button"
-                          onClick={() =>
-                            router.push(`/work-orders/${workOrder.id}`)
-                          }
-                          className="block w-full rounded-lg border border-gray-200 bg-gray-50 p-3 text-left hover:bg-gray-100"
-                        >
-                          <p className="font-semibold text-gray-700">
-                            {workOrder.title}
-                          </p>
-
-                          <p className="mt-1 text-sm text-gray-500">
-                            Completed{" "}
-                            {formatCompletedDate(
-                              workOrder.completed_at
-                            )}
-                          </p>
-                        </button>
-                      ))
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </section>
-
+       
         <section className="mt-8 rounded-xl bg-white p-6 shadow">
           <h2 className="mb-4 text-xl font-semibold">
             Quick Actions
