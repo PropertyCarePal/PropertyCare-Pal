@@ -21,7 +21,9 @@ export default function Home() {
   const supabase = getSupabaseClient();
 
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
-  const [loadingWorkOrders, setLoadingWorkOrders] = useState(true);
+const [propertyCount, setPropertyCount] = useState(0);
+const [assetCount, setAssetCount] = useState(0);
+const [loadingWorkOrders, setLoadingWorkOrders] = useState(true);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -62,7 +64,38 @@ export default function Home() {
       }
 
       setWorkOrders(data ?? []);
-      setLoadingWorkOrders(false);
+
+const { count: propertiesCount, error: propertiesCountError } =
+  await supabase
+    .from("properties")
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", profile.organization_id);
+
+if (propertiesCountError) {
+  console.error(
+    "DASHBOARD PROPERTY COUNT ERROR:",
+    propertiesCountError
+  );
+} else {
+  setPropertyCount(propertiesCount ?? 0);
+}
+
+const { count: assetsCount, error: assetsCountError } =
+  await supabase
+    .from("assets")
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", profile.organization_id);
+
+if (assetsCountError) {
+  console.error(
+    "DASHBOARD ASSET COUNT ERROR:",
+    assetsCountError
+  );
+} else {
+  setAssetCount(assetsCount ?? 0);
+}
+
+setLoadingWorkOrders(false);
     }
 
     loadWorkOrders();
@@ -161,7 +194,9 @@ export default function Home() {
         <section className="grid gap-6 md:grid-cols-3">
           <div className="rounded-xl bg-white p-6 shadow">
             <h2 className="text-lg font-semibold">Properties</h2>
-            <p className="mt-4 text-4xl font-bold">24</p>
+            <p className="mt-4 text-4xl font-bold">
+  {propertyCount}
+</p>
             <p className="text-gray-500">
               Active properties managed
             </p>
@@ -179,7 +214,9 @@ export default function Home() {
 
           <div className="rounded-xl bg-white p-6 shadow">
             <h2 className="text-lg font-semibold">Assets</h2>
-            <p className="mt-4 text-4xl font-bold">156</p>
+            <p className="mt-4 text-4xl font-bold">
+  {assetCount}
+</p>
             <p className="text-gray-500">
               Tracked property assets
             </p>
