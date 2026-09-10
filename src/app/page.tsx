@@ -220,6 +220,17 @@ setLoadingWorkOrders(false);
   const cancelledWorkOrders = workOrders.filter(
     (workOrder) => workOrder.status === "Cancelled"
   );
+  const highPriorityWorkOrders = activeWorkOrders.filter(
+    (workOrder) => workOrder.priority === "High"
+  );
+  
+  const mediumPriorityWorkOrders = activeWorkOrders.filter(
+    (workOrder) => workOrder.priority === "Medium"
+  );
+  
+  const lowPriorityWorkOrders = activeWorkOrders.filter(
+    (workOrder) => workOrder.priority === "Low"
+  );
   
   const overdueWorkOrders = activeWorkOrders.filter((workOrder) => {
     if (!workOrder.due_date) return false;
@@ -395,6 +406,73 @@ setLoadingWorkOrders(false);
             </button>
           </div>
         </section>
+        <section className="mt-8">
+  <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+    Maintenance Priorities
+  </h2>
+
+  <div className="grid gap-4 md:grid-cols-3">
+    <button
+      type="button"
+      onClick={() => router.push("/work-orders")}
+      className="rounded-xl bg-white p-6 text-left shadow transition hover:shadow-md"
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-red-700">
+          High Priority
+        </h3>
+
+        <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-700">
+          {highPriorityWorkOrders.length}
+        </span>
+      </div>
+
+      <p className="mt-4 text-sm text-gray-500">
+        Active high-priority maintenance items
+      </p>
+    </button>
+
+    <button
+      type="button"
+      onClick={() => router.push("/work-orders")}
+      className="rounded-xl bg-white p-6 text-left shadow transition hover:shadow-md"
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-orange-700">
+          Medium Priority
+        </h3>
+
+        <span className="rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-700">
+          {mediumPriorityWorkOrders.length}
+        </span>
+      </div>
+
+      <p className="mt-4 text-sm text-gray-500">
+        Active medium-priority maintenance items
+      </p>
+    </button>
+
+    <button
+      type="button"
+      onClick={() => router.push("/work-orders")}
+      className="rounded-xl bg-white p-6 text-left shadow transition hover:shadow-md"
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-blue-700">
+          Low Priority
+        </h3>
+
+        <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
+          {lowPriorityWorkOrders.length}
+        </span>
+      </div>
+
+      <p className="mt-4 text-sm text-gray-500">
+        Active low-priority maintenance items
+      </p>
+    </button>
+  </div>
+</section> 
         <section className="mt-8">
   <h2 className="mb-4 text-2xl font-semibold text-gray-900">
     Property Activity
