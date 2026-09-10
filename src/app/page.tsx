@@ -447,6 +447,78 @@ setLoadingWorkOrders(false);
     </div>
   )}
 </section>
+<section className="mt-8">
+  <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+    Upcoming Maintenance
+  </h2>
+
+  {loadingWorkOrders ? (
+    <div className="rounded-xl bg-white p-6 shadow">
+      <p className="text-gray-500">
+        Loading upcoming maintenance...
+      </p>
+    </div>
+  ) : (
+    <div className="rounded-xl bg-white p-6 shadow">
+      {activeWorkOrders
+        .filter((workOrder) => workOrder.due_date)
+        .sort(
+          (a, b) =>
+            new Date(`${a.due_date}T00:00:00`).getTime() -
+            new Date(`${b.due_date}T00:00:00`).getTime()
+        )
+        .slice(0, 6)
+        .length === 0 ? (
+        <p className="text-sm text-gray-500">
+          No upcoming maintenance scheduled.
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {activeWorkOrders
+            .filter((workOrder) => workOrder.due_date)
+            .sort(
+              (a, b) =>
+                new Date(`${a.due_date}T00:00:00`).getTime() -
+                new Date(`${b.due_date}T00:00:00`).getTime()
+            )
+            .slice(0, 6)
+            .map((workOrder) => (
+              <button
+                key={workOrder.id}
+                type="button"
+                onClick={() =>
+                  router.push(`/work-orders/${workOrder.id}`)
+                }
+                className="flex w-full items-center justify-between gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 text-left transition hover:bg-gray-100"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-gray-900">
+                    {workOrder.title}
+                  </p>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    Due {formatDate(workOrder.due_date)}
+                  </p>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
+                  {workOrder.priority && (
+                    <span className="rounded-full bg-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-700">
+                      {workOrder.priority}
+                    </span>
+                  )}
+
+                  <span className="text-sm font-medium text-blue-600">
+                    View →
+                  </span>
+                </div>
+              </button>
+            ))}
+        </div>
+      )}
+    </div>
+  )}
+</section>
         <section className="mt-8">
           <h2 className="mb-4 text-2xl font-semibold text-gray-900">
             Maintenance Overview
