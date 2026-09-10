@@ -13,6 +13,7 @@ type WorkOrder = {
   priority: string | null;
   due_date: string | null;
   completed_at: string | null;
+  property_id: string | null;
 };
 
 export default function Home() {
@@ -21,6 +22,16 @@ export default function Home() {
   const supabase = getSupabaseClient();
 
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
+  const [propertyActivity, setPropertyActivity] = useState<
+  Record<
+    string,
+    {
+      propertyName: string;
+      activeCount: number;
+      overdueCount: number;
+    }
+  >
+>({});
 const [propertyCount, setPropertyCount] = useState(0);
 const [assetCount, setAssetCount] = useState(0);
 const [loadingWorkOrders, setLoadingWorkOrders] = useState(true);
@@ -50,18 +61,85 @@ const [loadingWorkOrders, setLoadingWorkOrders] = useState(true);
       }
 
       const { data, error } = await supabase
-        .from("work_orders")
-        .select(
-          "id, title, status, priority, due_date, completed_at"
-        )
-        .eq("organization_id", profile.organization_id)
-        .order("due_date", { ascending: true });
+      .from("work_orders")
+      .select(`
+        id,
+        title,
+        status,
+        priority,
+        due_date,
+        completed_at,
+        property_id
+      `)
+      .eq("organization_id", profile.organization_id)
+      .order("due_date", { ascending: true });
+    
+    if (error) {
+      console.error("DASHBOARD WORK ORDERS ERROR:", error);
+      setLoadingWorkOrders(false);
+      return;
+    }
+    const { data: properties, error: propertiesError } = await supabase
+  .from("properties")
+  .select("id, name")
+  .eq("organization_id", profile.organization_id);
 
-      if (error) {
-        console.error("DASHBOARD WORK ORDERS ERROR:", error);
-        setLoadingWorkOrders(false);
-        return;
+if (propertiesError) {
+  console.error("DASHBOARD PROPERTIES ERROR:", propertiesError);
+}
+const activity = (data ?? [])
+  .filter(
+    (workOrder) =>
+      workOrder.status !== "Completed" &&
+      workOrder.status !== "Cancelled" &&
+      workOrder.property_id
+  )
+  .reduce(
+    (result, workOrder) => {
+      const property = properties?.find(
+        (property) => property.id === workOrder.property_id
+      );
+
+      if (!property || !workOrder.property_id) {
+        return result;
       }
+
+      if (!result[workOrder.property_id]) {
+        result[workOrder.property_id] = {
+          propertyName: property.name,
+          activeCount: 0,
+          overdueCount: 0,
+        };
+      }
+
+      result[workOrder.property_id].activeCount += 1;
+
+      if (workOrder.due_date) {
+        const dueDate = new Date(`${workOrder.due_date}T00:00:00`);
+
+        if (dueDate < today) {
+          result[workOrder.property_id].overdueCount += 1;
+        }
+      }
+
+      return result;
+    },
+    {} as Record<
+      string,
+      {
+        propertyName: string;
+        activeCount: number;
+        overdueCount: number;
+      }
+    >
+  );
+
+setPropertyActivity(activity);
+
+ 
+
+   
+ 
 
       setWorkOrders(data ?? []);
 
@@ -142,7 +220,7 @@ setLoadingWorkOrders(false);
   const cancelledWorkOrders = workOrders.filter(
     (workOrder) => workOrder.status === "Cancelled"
   );
-
+  
   const overdueWorkOrders = activeWorkOrders.filter((workOrder) => {
     if (!workOrder.due_date) return false;
 
@@ -237,6 +315,7 @@ setLoadingWorkOrders(false);
             </p>
           </div>
         </section>
+        
         <section className="mt-8">
           <h2 className="mb-4 text-2xl font-semibold text-gray-900">
             Maintenance Status
@@ -316,6 +395,58 @@ setLoadingWorkOrders(false);
             </button>
           </div>
         </section>
+        <section className="mt-8">
+  <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+    Property Activity
+  </h2>
+
+  {Object.keys(propertyActivity).length === 0 ? (
+    <div className="rounded-xl bg-white p-6 shadow">
+      <p className="text-gray-500">
+        No properties currently have active maintenance work.
+      </p>
+    </div>
+  ) : (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {Object.entries(propertyActivity)
+        .sort(([, a], [, b]) => b.activeCount - a.activeCount)
+        .slice(0, 6)
+        .map(([propertyId, activity]) => (
+          <button
+            key={propertyId}
+            type="button"
+            onClick={() => router.push(`/properties/${propertyId}`)}
+            className="rounded-xl bg-white p-5 text-left shadow transition hover:shadow-md"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <h3 className="font-semibold text-gray-900">
+                {activity.propertyName}
+              </h3>
+
+              {activity.overdueCount > 0 && (
+                <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">
+                  {activity.overdueCount} overdue
+                </span>
+              )}
+            </div>
+
+            <p className="mt-3 text-3xl font-bold text-gray-900">
+              {activity.activeCount}
+            </p>
+
+            <p className="text-sm text-gray-500">
+              Active maintenance{" "}
+              {activity.activeCount === 1 ? "item" : "items"}
+            </p>
+
+            <p className="mt-3 text-sm font-medium text-gray-600">
+              View property →
+            </p>
+          </button>
+        ))}
+    </div>
+  )}
+</section>
         <section className="mt-8">
           <h2 className="mb-4 text-2xl font-semibold text-gray-900">
             Maintenance Overview
