@@ -127,6 +127,21 @@ setLoadingWorkOrders(false);
       workOrder.status !== "Completed" &&
       workOrder.status !== "Cancelled"
   );
+  const openWorkOrders = workOrders.filter(
+    (workOrder) => workOrder.status === "Open"
+  );
+
+  const inProgressWorkOrders = workOrders.filter(
+    (workOrder) => workOrder.status === "In Progress"
+  );
+
+  const completedWorkOrders = workOrders.filter(
+    (workOrder) => workOrder.status === "Completed"
+  );
+
+  const cancelledWorkOrders = workOrders.filter(
+    (workOrder) => workOrder.status === "Cancelled"
+  );
 
   const overdueWorkOrders = activeWorkOrders.filter((workOrder) => {
     if (!workOrder.due_date) return false;
@@ -222,7 +237,85 @@ setLoadingWorkOrders(false);
             </p>
           </div>
         </section>
+        <section className="mt-8">
+          <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+            Maintenance Status
+          </h2>
 
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <button
+              type="button"
+              onClick={() => router.push("/work-orders")}
+              className="rounded-xl bg-white p-5 text-left shadow transition hover:shadow-md"
+            >
+              <p className="text-sm font-medium text-gray-500">
+                Open
+              </p>
+
+              <p className="mt-2 text-3xl font-bold text-blue-700">
+                {openWorkOrders.length}
+              </p>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Work orders
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push("/work-orders")}
+              className="rounded-xl bg-white p-5 text-left shadow transition hover:shadow-md"
+            >
+              <p className="text-sm font-medium text-gray-500">
+                In Progress
+              </p>
+
+              <p className="mt-2 text-3xl font-bold text-orange-600">
+                {inProgressWorkOrders.length}
+              </p>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Work orders
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push("/work-orders")}
+              className="rounded-xl bg-white p-5 text-left shadow transition hover:shadow-md"
+            >
+              <p className="text-sm font-medium text-gray-500">
+                Completed
+              </p>
+
+              <p className="mt-2 text-3xl font-bold text-green-700">
+                {completedWorkOrders.length}
+              </p>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Work orders
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push("/work-orders")}
+              className="rounded-xl bg-white p-5 text-left shadow transition hover:shadow-md"
+            >
+              <p className="text-sm font-medium text-gray-500">
+                Cancelled
+              </p>
+
+              <p className="mt-2 text-3xl font-bold text-gray-500">
+                {cancelledWorkOrders.length}
+              </p>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Work orders
+              </p>
+            </button>
+          </div>
+        </section>
         <section className="mt-8">
           <h2 className="mb-4 text-2xl font-semibold text-gray-900">
             Maintenance Overview
