@@ -39,6 +39,14 @@ export default function WorkOrderDetailPage() {
   const [activities, setActivities] = useState<any[]>([]);
   const [attachments, setAttachments] = useState<any[]>([]);
   const [property, setProperty] = useState<Property | null>(null);
+  const [vendor, setVendor] = useState<{
+    id: string;
+    company_name: string;
+    contact_name: string | null;
+    phone: string | null;
+    email: string | null;
+    notes: string | null;
+  } | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
   const [editing, setEditing] = useState(false);
 
@@ -59,6 +67,11 @@ export default function WorkOrderDetailPage() {
   const [editEstimatedCost, setEditEstimatedCost] = useState("");
   const [editActualCost, setEditActualCost] = useState("");
   const [editCompletionNotes, setEditCompletionNotes] = useState("");
+  const [editVendorCompany, setEditVendorCompany] = useState("");
+const [editVendorContact, setEditVendorContact] = useState("");
+const [editVendorPhone, setEditVendorPhone] = useState("");
+const [editVendorEmail, setEditVendorEmail] = useState("");
+const [editVendorNotes, setEditVendorNotes] = useState("");
   async function saveWorkOrderChanges() {
     if (!user || !params.id) return;
     const previousStatus = workOrder?.status;
@@ -96,6 +109,89 @@ export default function WorkOrderDetailPage() {
     }
   
     setWorkOrder(data);
+    const hasVendorInformation =
+  editVendorCompany.trim() ||
+  editVendorContact.trim() ||
+  editVendorPhone.trim() ||
+  editVendorEmail.trim() ||
+  editVendorNotes.trim();
+
+if (hasVendorInformation) {
+  const { data: existingVendor, error: existingVendorError } =
+    await supabase
+      .from("work_order_vendors")
+      .select("id")
+      .eq("work_order_id", String(params.id))
+      .eq("organization_id", workOrder?.organization_id)
+      .maybeSingle();
+
+  if (existingVendorError) {
+    console.error("EXISTING VENDOR LOOKUP ERROR:", existingVendorError);
+    alert(`Work order saved, but vendor information could not be loaded.\n\n${existingVendorError.message}`);
+    return;
+  }
+
+  const vendorValues = {
+    company_name: editVendorCompany.trim() || "Vendor",
+    contact_name: editVendorContact.trim() || null,
+    phone: editVendorPhone.trim() || null,
+    email: editVendorEmail.trim() || null,
+    notes: editVendorNotes.trim() || null,
+  };
+
+  if (existingVendor) {
+    const { data: updatedVendor, error: vendorUpdateError } =
+      await supabase
+        .from("work_order_vendors")
+        .update(vendorValues)
+        .eq("id", existingVendor.id)
+        .eq("work_order_id", String(params.id))
+        .eq("organization_id", workOrder?.organization_id)
+        .select()
+        .single();
+
+    if (vendorUpdateError) {
+      console.error("VENDOR UPDATE ERROR:", vendorUpdateError);
+      alert(`Work order saved, but vendor information could not be updated.\n\n${vendorUpdateError.message}`);
+      return;
+    }
+
+    setVendor(updatedVendor);
+  } else {
+    const { data: newVendor, error: vendorInsertError } =
+      await supabase
+        .from("work_order_vendors")
+        .insert({
+          work_order_id: String(params.id),
+          organization_id: workOrder?.organization_id,
+          ...vendorValues,
+        })
+        .select()
+        .single();
+
+    if (vendorInsertError) {
+      console.error("VENDOR INSERT ERROR:", vendorInsertError);
+      alert(`Work order saved, but vendor information could not be added.\n\n${vendorInsertError.message}`);
+      return;
+    }
+
+    setVendor(newVendor);
+  }
+} else {
+  const { error: vendorDeleteError } = await supabase
+    .from("work_order_vendors")
+    .delete()
+    .eq("work_order_id", String(params.id))
+    .eq("organization_id", workOrder?.organization_id);
+
+  if (vendorDeleteError) {
+    console.error("VENDOR DELETE ERROR:", vendorDeleteError);
+    alert(`Work order saved, but vendor information could not be removed.\n\n${vendorDeleteError.message}`);
+    return;
+  }
+
+  setVendor(null);
+}
     const { data: activityData, error: activityError } = await supabase
   .from("work_order_activity")
   .select("*")
@@ -447,6 +543,26 @@ if (attachmentError) {
       .eq("id", data.property_id)
       .eq("organization_id", profile.organization_id)
       .single();
+      const { data: vendorData, error: vendorError } = await supabase
+  .from("work_order_vendors")
+  .select(`
+    id,
+    company_name,
+    contact_name,
+    phone,
+    email,
+    notes
+  `)
+  .eq("work_order_id", String(params.id))
+  .eq("organization_id", profile.organization_id)
+  .maybeSingle();
+
+if (vendorError) {
+  console.error("VENDOR LOAD ERROR:", vendorError);
+} else {
+  console.log("VENDOR LOADED:", vendorData);
+  setVendor(vendorData);
+}
 
     if (propertyError) {
       console.error("PROPERTY LOAD ERROR:", propertyError);
@@ -606,7 +722,80 @@ if (attachmentError) {
   </button>
 )}
 </div>
+<div className="md:col-span-2 rounded-lg border border-gray-200 bg-gray-50 p-4">
+        <h3 className="text-lg font-semibold text-gray-900">
+          Vendor Information
+        </h3>
 
+        <p className="mt-1 text-sm text-gray-500">
+          Add the outside vendor or service provider handling this work order.
+        </p>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Vendor Company
+            </label>
+            <input
+              value={editVendorCompany}
+              onChange={(e) => setEditVendorCompany(e.target.value)}
+              placeholder="Company name"
+              className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-3"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Contact Name
+            </label>
+            <input
+              value={editVendorContact}
+              onChange={(e) => setEditVendorContact(e.target.value)}
+              placeholder="Vendor contact person"
+              className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-3"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Phone
+            </label>
+            <input
+              type="tel"
+              value={editVendorPhone}
+              onChange={(e) => setEditVendorPhone(e.target.value)}
+              placeholder="Vendor phone number"
+              className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-3"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Email
+            </label>
+            <input
+              type="email"
+              value={editVendorEmail}
+              onChange={(e) => setEditVendorEmail(e.target.value)}
+              placeholder="Vendor email address"
+              className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-3"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Vendor Notes
+            </label>
+            <textarea
+              value={editVendorNotes}
+              onChange={(e) => setEditVendorNotes(e.target.value)}
+              placeholder="Additional vendor information or instructions"
+              rows={3}
+              className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-3"
+            />
+          </div>
+        </div>
+      </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Estimated Cost
@@ -740,6 +929,11 @@ if (attachmentError) {
         : ""
     );
     setEditCompletionNotes(workOrder.completion_notes || "");
+    setEditVendorCompany(vendor?.company_name || "");
+setEditVendorContact(vendor?.contact_name || "");
+setEditVendorPhone(vendor?.phone || "");
+setEditVendorEmail(vendor?.email || "");
+setEditVendorNotes(vendor?.notes || "");
     setEditing(true);
   }}
   className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
@@ -957,9 +1151,85 @@ activity.description?.toLowerCase().includes("closed") ? (
               </dd>
             </div>
           </dl>
-        </div>
+            {/* Vendor Information */}
+<div className="rounded-lg border border-gray-200 bg-white p-6">
+  <h2 className="text-xl font-semibold text-gray-900">
+    Vendor Information
+  </h2>
+
+  {vendor ? (
+    <div className="mt-4 grid gap-4 md:grid-cols-2">
+      <div>
+        <p className="text-sm font-medium text-gray-500">
+          Vendor Company
+        </p>
+        <p className="mt-1 text-base text-gray-900">
+          {vendor.company_name}
+        </p>
       </div>
 
+      {vendor.contact_name && (
+        <div>
+          <p className="text-sm font-medium text-gray-500">
+            Contact Name
+          </p>
+          <p className="mt-1 text-base text-gray-900">
+            {vendor.contact_name}
+          </p>
+        </div>
+      )}
+
+      {vendor.phone && (
+        <div>
+          <p className="text-sm font-medium text-gray-500">
+            Phone
+          </p>
+          <a
+            href={`tel:${vendor.phone}`}
+            className="mt-1 block text-base text-blue-600 hover:text-blue-800"
+          >
+            {vendor.phone}
+          </a>
+        </div>
+      )}
+
+      {vendor.email && (
+        <div>
+          <p className="text-sm font-medium text-gray-500">
+            Email
+          </p>
+          <a
+            href={`mailto:${vendor.email}`}
+            className="mt-1 block text-base text-blue-600 hover:text-blue-800"
+          >
+            {vendor.email}
+          </a>
+        </div>
+      )}
+
+      {vendor.notes && (
+        <div className="md:col-span-2">
+          <p className="text-sm font-medium text-gray-500">
+            Vendor Notes
+          </p>
+          <p className="mt-1 whitespace-pre-wrap text-base text-gray-900">
+            {vendor.notes}
+          </p>
+        </div>
+      )}
+    </div>
+  ) : (
+    <p className="mt-4 text-sm text-gray-500">
+      No vendor assigned to this work order.
+    </p>
+  )}
+</div>
+  
+        </div>
+        </div>
+        
+            
+ 
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-gray-900">
           Completion Notes
