@@ -14,19 +14,30 @@ type Property = {
   address: string | null;
   city: string | null;
   state: string | null;
+  zip_code: string | null;
   status: string | null;
   property_type: string | null;
 };
+type PropertyContactMethod = {
+  id: string;
+  property_contact_id: string;
+  method_type: "email" | "phone";
+  label: string;
+  value: string;
+  created_at: string;
+  updated_at: string;
+};
+
 type PropertyContact = {
   id: string;
   organization_id: string;
   property_id: string;
   full_name: string;
-  email: string | null;
-  phone: string | null;
+  contact_type: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
+  methods: PropertyContactMethod[];
 };
 type PropertyAccess = {
   id: string;
@@ -49,12 +60,21 @@ export default function PropertyDetailsPage() {
 
   const [property, setProperty] = useState<Property | null>(null);
   const [loadingProperty, setLoadingProperty] = useState(true);
-  const [editingContact, setEditingContact] = useState(false);
-const [contactName, setContactName] = useState("");
-const [contactEmail, setContactEmail] = useState("");
-const [contactPhone, setContactPhone] = useState("");
-const [contactNotes, setContactNotes] = useState("");
-const [savingContact, setSavingContact] = useState(false);
+ 
+  const [editingProperty, setEditingProperty] = useState(false);
+const [propertyName, setPropertyName] = useState("");
+const [propertyAddress, setPropertyAddress] = useState("");
+const [propertyCity, setPropertyCity] = useState("");
+const [propertyState, setPropertyState] = useState("");
+const [propertyZip, setPropertyZip] = useState("");
+const [propertyType, setPropertyType] = useState("");
+const [propertyStatus, setPropertyStatus] = useState("");
+const [ownerName, setOwnerName] = useState("");
+const [ownerEmail, setOwnerEmail] = useState("");
+const [ownerPhone, setOwnerPhone] = useState("");
+const [savingProperty, setSavingProperty] = useState(false);
+
+
 const [propertyAccess, setPropertyAccess] =
   useState<PropertyAccess | null>(null);
 
@@ -66,10 +86,14 @@ const [lockboxCode, setLockboxCode] = useState("");
 const [accessInstructions, setAccessInstructions] = useState("");
 const [privateNotes, setPrivateNotes] = useState("");
 const [savingAccess, setSavingAccess] = useState(false);
-  const [propertyContact, setPropertyContact] =
-  useState<PropertyContact | null>(null);
-
-const [loadingContact, setLoadingContact] = useState(true);
+const [propertyContacts, setPropertyContacts] = useState<PropertyContact[]>([]);
+const [showContactForm, setShowContactForm] = useState(false);
+const [contactFullName, setContactFullName] = useState("");
+const [contactType, setContactType] = useState("");
+const [contactEmail, setContactEmail] = useState("");
+const [contactPhone, setContactPhone] = useState("");
+const [editingContactId, setEditingContactId] = useState<string | null>(null);
+const [loadingContacts, setLoadingContacts] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
   const [assets, setAssets] = useState<any[]>([]);
   const [showAssetForm, setShowAssetForm] = useState(false);
@@ -300,7 +324,322 @@ function editWorkOrder(workOrder: any) {
   
     alert("Work order deleted successfully.");
   }
+  async function saveProperty() {
+    if (!user || !params.id) return;
+  
+    setSavingProperty(true);
+  
+    const { data, error } = await supabase
+      .from("properties")
+      .update({
+        name: propertyName,
+        address: propertyAddress,
+        city: propertyCity,
+        state: propertyState,
+        zip_code: propertyZip,
+        property_type: propertyType,
+        status: propertyStatus,
+        owner_name: ownerName,
+        owner_email: ownerEmail,
+        owner_phone: ownerPhone,
+      })
+      .eq("id", params.id)
+      .select("*")
+      .single();
+  
+    if (error) {
+      console.error("PROPERTY UPDATE ERROR:", error);
+      alert("Unable to save property information.");
+      setSavingProperty(false);
+      return;
+    }
+  
+    setProperty(data);
+    setEditingProperty(false);
+    setSavingProperty(false);
+    alert("Property information saved successfully.");
+}
+
+async function savePropertyContact() {
+  if (!user || !params.id) return;
+
+  if (!contactFullName.trim()) {
+    alert("Please enter the contact's full name.");
+    return;
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile) {
+    console.error("CONTACT PROFILE ERROR:", profileError);
+    alert("Unable to find your organization.");
+    return;
+  }
+
+  // EDIT EXISTING CONTACT
+  if (editingContactId) {
+    const { error: contactError } = await supabase
+      .from("property_contacts")
+      .update({
+        full_name: contactFullName.trim(),
+        contact_type: contactType || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", editingContactId)
+      .eq("property_id", String(params.id))
+      .eq("organization_id", profile.organization_id);
+
+    if (contactError) {
+      console.error("PROPERTY CONTACT UPDATE ERROR:", contactError);
+      alert("Unable to update the property contact.");
+      return;
+    }
+
+    // Remove existing email/phone methods so we can save the current form values.
+    const { error: deleteMethodsError } = await supabase
+      .from("property_contact_methods")
+      .delete()
+      .eq("property_contact_id", editingContactId);
+
+    if (deleteMethodsError) {
+      console.error(
+        "PROPERTY CONTACT METHODS DELETE ERROR:",
+        deleteMethodsError
+      );
+      alert("Unable to update the contact methods.");
+      return;
+    }
+
+    const methods = [];
+
+    if (contactEmail.trim()) {
+      methods.push({
+        property_contact_id: editingContactId,
+        method_type: "email",
+        label: "Email",
+        value: contactEmail.trim(),
+      });
+    }
+
+    if (contactPhone.trim()) {
+      methods.push({
+        property_contact_id: editingContactId,
+        method_type: "phone",
+        label: "Phone",
+        value: contactPhone.trim(),
+      });
+    }
+
+    if (methods.length > 0) {
+      const { error: methodsError } = await supabase
+        .from("property_contact_methods")
+        .insert(methods);
+
+      if (methodsError) {
+        console.error(
+          "PROPERTY CONTACT METHODS UPDATE ERROR:",
+          methodsError
+        );
+        alert("Unable to save the updated contact methods.");
+        return;
+      }
+    }
+
+    const { data: refreshedContacts, error: refreshError } = await supabase
+      .from("property_contacts")
+      .select(`
+        id,
+        organization_id,
+        property_id,
+        full_name,
+        contact_type,
+        notes,
+        created_at,
+        updated_at,
+        methods:property_contact_methods (
+          id,
+          property_contact_id,
+          method_type,
+          label,
+          value,
+          created_at,
+          updated_at
+        )
+      `)
+      .eq("property_id", String(params.id))
+      .eq("organization_id", profile.organization_id)
+      .order("full_name", { ascending: true });
+
+    if (refreshError) {
+      console.error("PROPERTY CONTACT REFRESH ERROR:", refreshError);
+    } else {
+      setPropertyContacts(refreshedContacts || []);
+    }
+
+    setEditingContactId(null);
+    setContactFullName("");
+    setContactType("");
+    setContactEmail("");
+    setContactPhone("");
+    setShowContactForm(false);
+
+    alert("Property contact updated successfully.");
+    return;
+  }
+
+  // ADD NEW CONTACT
+  const { data: contact, error: contactError } = await supabase
+    .from("property_contacts")
+    .insert({
+      organization_id: profile.organization_id,
+      property_id: String(params.id),
+      full_name: contactFullName.trim(),
+      contact_type: contactType || null,
+    })
+    .select("*")
+    .single();
+
+  if (contactError || !contact) {
+    console.error("PROPERTY CONTACT INSERT ERROR:", contactError);
+    alert("Unable to save the property contact.");
+    return;
+  }
+
+  const methods = [];
+
+  if (contactEmail.trim()) {
+    methods.push({
+      property_contact_id: contact.id,
+      method_type: "email",
+      label: "Email",
+      value: contactEmail.trim(),
+    });
+  }
+
+  if (contactPhone.trim()) {
+    methods.push({
+      property_contact_id: contact.id,
+      method_type: "phone",
+      label: "Phone",
+      value: contactPhone.trim(),
+    });
+  }
+
+  if (methods.length > 0) {
+    const { error: methodsError } = await supabase
+      .from("property_contact_methods")
+      .insert(methods);
+
+    if (methodsError) {
+      console.error("PROPERTY CONTACT METHODS INSERT ERROR:", methodsError);
+
+      await supabase
+        .from("property_contacts")
+        .delete()
+        .eq("id", contact.id);
+
+      alert("Unable to save the contact methods.");
+      return;
+    }
+  }
+
+  const { data: refreshedContacts, error: refreshError } = await supabase
+    .from("property_contacts")
+    .select(`
+      id,
+      organization_id,
+      property_id,
+      full_name,
+      contact_type,
+      notes,
+      created_at,
+      updated_at,
+      methods:property_contact_methods (
+        id,
+        property_contact_id,
+        method_type,
+        label,
+        value,
+        created_at,
+        updated_at
+      )
+    `)
+    .eq("property_id", String(params.id))
+    .eq("organization_id", profile.organization_id)
+    .order("full_name", { ascending: true });
+
+  if (refreshError) {
+    console.error("PROPERTY CONTACT REFRESH ERROR:", refreshError);
+  } else {
+    setPropertyContacts(refreshedContacts || []);
+  }
+
+  setEditingContactId(null);
+  setContactFullName("");
+  setContactType("");
+  setContactEmail("");
+  setContactPhone("");
+  setShowContactForm(false);
+
+  alert("Property contact saved successfully.");
+}
+async function deletePropertyContact(contactId: string) {
+  if (!user || !params.id) return;
+
+  const confirmed = window.confirm(
+    "Are you sure you want to delete this contact?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile) {
+    console.error("CONTACT PROFILE ERROR:", profileError);
+    alert("Unable to find your organization.");
+    return;
+  }
+
+  const { error: deleteError } = await supabase
+    .from("property_contacts")
+    .delete()
+    .eq("id", contactId)
+    .eq("property_id", String(params.id))
+    .eq("organization_id", profile.organization_id);
+
+  if (deleteError) {
+    console.error("PROPERTY CONTACT DELETE ERROR:", deleteError);
+    alert("Unable to delete the property contact.");
+    return;
+  }
+
+  setPropertyContacts((currentContacts) =>
+    currentContacts.filter((contact) => contact.id !== contactId)
+  );
+
+  if (editingContactId === contactId) {
+    setEditingContactId(null);
+    setContactFullName("");
+    setContactType("");
+    setContactEmail("");
+    setContactPhone("");
+    setShowContactForm(false);
+  }
+
+  alert("Property contact deleted successfully.");
+}
 async function addWorkOrder() {
+   
   if (!user || !params.id) return;
 
   const { data: profile, error: profileError } = await supabase
@@ -419,70 +758,8 @@ async function updateWorkOrderStatus(
         )
       );
   }
-  async function savePropertyContact() {
-    if (!user || !property) return;
   
-    if (!contactName.trim()) {
-      alert("Please enter the homeowner or client name.");
-      return;
-    }
-  
-    setSavingContact(true);
-  
-    try {
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("organization_id")
-        .eq("id", user.id)
-        .single();
-  
-      if (profileError || !profile) {
-        console.error("PROFILE ERROR:", profileError);
-        alert("Unable to determine your organization.");
-        return;
-      }
-  
-      const contactPayload = {
-        organization_id: profile.organization_id,
-        property_id: property.id,
-        full_name: contactName.trim(),
-        email: contactEmail.trim() || null,
-        phone: contactPhone.trim() || null,
-        notes: contactNotes.trim() || null,
-        updated_at: new Date().toISOString(),
-      };
-  
-      let result;
-  
-      if (propertyContact) {
-        result = await supabase
-          .from("property_contacts")
-          .update(contactPayload)
-          .eq("id", propertyContact.id)
-          .select()
-          .single();
-      } else {
-        result = await supabase
-          .from("property_contacts")
-          .insert(contactPayload)
-          .select()
-          .single();
-      }
-  
-      if (result.error) {
-        console.error("PROPERTY CONTACT SAVE ERROR:", result.error);
-        alert(`Unable to save client.\n\n${result.error.message}`);
-        return;
-      }
-  
-      setPropertyContact(result.data);
-      setEditingContact(false);
-  
-      alert("Client information saved successfully.");
-    } finally {
-      setSavingContact(false);
-    }
-  }
+    
   async function savePropertyAccess() {
     if (!user || !property) return;
   
@@ -601,19 +878,49 @@ useEffect(() => {
       }
       setProperty(data);
 
-const { data: contactData, error: contactError } = await supabase
-  .from("property_contacts")
-  .select("*")
-  .eq("property_id", String(params.id))
-  .eq("organization_id", profile.organization_id)
-  .maybeSingle();
+      setPropertyName(data.name || "");
+      setPropertyAddress(data.address || "");
+      setPropertyCity(data.city || "");
+      setPropertyState(data.state || "");
+      setPropertyZip(data.zip || "");
+      setPropertyType(data.property_type || "");
+      setPropertyStatus(data.status || "");
+      setOwnerName(data.owner_name || "");
+      setOwnerEmail(data.owner_email || "");
+      setOwnerPhone(data.owner_phone || ""); 
 
-if (contactError) {
-  console.error("PROPERTY CONTACT LOAD ERROR:", contactError);
-} else {
-  console.log("PROPERTY CONTACT LOADED:", contactData);
-  setPropertyContact(contactData || null);
-}
+      const { data: contactData, error: contactError } = await supabase
+      .from("property_contacts")
+      .select(`
+        id,
+        organization_id,
+        property_id,
+        full_name,
+        contact_type,
+        notes,
+        created_at,
+        updated_at,
+        methods:property_contact_methods (
+          id,
+          property_contact_id,
+          method_type,
+          label,
+          value,
+          created_at,
+          updated_at
+        )
+      `)
+      .eq("property_id", String(params.id))
+      .eq("organization_id", profile.organization_id)
+      .order("full_name", { ascending: true });
+    
+    if (contactError) {
+      console.error("PROPERTY CONTACTS LOAD ERROR:", contactError);
+      setPropertyContacts([]);
+    } else {
+      console.log("PROPERTY CONTACTS LOADED:", contactData);
+      setPropertyContacts(contactData || []);
+    }
 const { data: accessData, error: accessError } = await supabase
   .from("property_access")
   .select("*")
@@ -755,203 +1062,221 @@ const { data: workOrderData, error: workOrderError } = await supabase
 
           <div className="rounded-xl bg-white p-6 shadow">
 
-            <h2 className="text-xl font-semibold text-gray-900">
-              Property Information
-            </h2>
+          <div className="flex items-center justify-between">
+  <h2 className="text-xl font-semibold text-gray-900">
+    Property Information
+  </h2>
 
-            <div className="mt-6 grid gap-6 md:grid-cols-2">
-
-              <div>
-                <p className="text-sm text-gray-500">
-                  Address
-                </p>
-
-                <p className="mt-1 font-medium text-gray-900">
-                  {property.address || "Not provided"}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-500">
-                  City
-                </p>
-
-                <p className="mt-1 font-medium text-gray-900">
-                  {property.city || "Not provided"}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-500">
-                  State
-                </p>
-
-                <p className="mt-1 font-medium text-gray-900">
-                  {property.state || "Not provided"}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-500">
-                  Property Type
-                </p>
-
-                <p className="mt-1 font-medium text-gray-900">
-                  {property.property_type || "Not provided"}
-                </p>
-              </div>
-
-            </div>
-            <div className="rounded-xl bg-white p-6 shadow">
-  <div className="flex items-center justify-between">
-    <div>
-      <h2 className="text-lg font-semibold text-gray-900">
-        Homeowner / Client
-      </h2>
-
-      <p className="mt-1 text-sm text-gray-500">
-        Contact information for this property
-      </p>
-    </div>
-
-    <button
-      type="button"
-      onClick={() => {
-        setContactName(propertyContact?.full_name || "");
-        setContactEmail(propertyContact?.email || "");
-        setContactPhone(propertyContact?.phone || "");
-        setContactNotes(propertyContact?.notes || "");
-        setEditingContact(true);
-      }}
-      className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
-    >
-      {propertyContact ? "Edit Client" : "Add Client"}
-    </button>
-  </div>
-
-  {propertyContact ? (
-    <div className="mt-6 grid gap-4 md:grid-cols-2">
+  <button
+    onClick={() => setEditingProperty(true)}
+    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+  >
+    Edit Property
+  </button>
+</div> 
+{editingProperty ? (
+  <div className="mt-6 space-y-6">
+    <div className="grid gap-6 md:grid-cols-2">
       <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-          Name
-        </p>
-        <p className="mt-1 text-gray-900">
-          {propertyContact.full_name}
-        </p>
-      </div>
-
-      <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-          Email
-        </p>
-        <p className="mt-1 text-gray-900">
-          {propertyContact.email || "Not provided"}
-        </p>
-      </div>
-
-      <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-          Phone
-        </p>
-        <p className="mt-1 text-gray-900">
-          {propertyContact.phone || "Not provided"}
-        </p>
-      </div>
-
-      <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-          Notes
-        </p>
-        <p className="mt-1 whitespace-pre-wrap text-gray-900">
-          {propertyContact.notes || "No notes"}
-        </p>
-      </div>
-    </div>
-  ) : (
-    <p className="mt-6 text-sm text-gray-500">
-      No homeowner or client information has been added yet.
-    </p>
-  )}
-</div>
-{editingContact && (
-  <div className="rounded-xl bg-white p-6 shadow">
-    <h2 className="text-lg font-semibold text-gray-900">
-      {propertyContact ? "Edit Homeowner / Client" : "Add Homeowner / Client"}
-    </h2>
-
-    <div className="mt-6 grid gap-4 md:grid-cols-2">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Full Name
+        <label className="text-sm font-medium text-gray-700">
+          Property Name
         </label>
         <input
-          value={contactName}
-          onChange={(e) => setContactName(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
-          placeholder="Homeowner name"
+          type="text"
+          value={propertyName}
+          onChange={(e) => setPropertyName(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Email
+        <label className="text-sm font-medium text-gray-700">
+          Address
+        </label>
+        <input
+          type="text"
+          value={propertyAddress}
+          onChange={(e) => setPropertyAddress(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">
+          City
+        </label>
+        <input
+          type="text"
+          value={propertyCity}
+          onChange={(e) => setPropertyCity(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">
+          State
+        </label>
+        <input
+          type="text"
+          value={propertyState}
+          onChange={(e) => setPropertyState(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">
+          ZIP Code
+        </label>
+        <input
+          type="text"
+          value={propertyZip}
+          onChange={(e) => setPropertyZip(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">
+          Property Type
+        </label>
+        <input
+          type="text"
+          value={propertyType}
+          onChange={(e) => setPropertyType(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">
+          Status
+        </label>
+        <input
+          type="text"
+          value={propertyStatus}
+          onChange={(e) => setPropertyStatus(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">
+          Owner Name
+        </label>
+        <input
+          type="text"
+          value={ownerName}
+          onChange={(e) => setOwnerName(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">
+          Owner Email
         </label>
         <input
           type="email"
-          value={contactEmail}
-          onChange={(e) => setContactEmail(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
-          placeholder="email@example.com"
+          value={ownerEmail}
+          onChange={(e) => setOwnerEmail(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Phone
+        <label className="text-sm font-medium text-gray-700">
+          Owner Phone
         </label>
         <input
           type="tel"
-          value={contactPhone}
-          onChange={(e) => setContactPhone(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
-          placeholder="(760) 555-1234"
-        />
-      </div>
-
-      <div className="md:col-span-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Notes
-        </label>
-        <textarea
-          value={contactNotes}
-          onChange={(e) => setContactNotes(e.target.value)}
-          rows={4}
-          className="mt-1 w-full rounded-lg border border-gray-300 p-3"
-          placeholder="General notes about the homeowner or client..."
+          value={ownerPhone}
+          onChange={(e) => setOwnerPhone(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
         />
       </div>
     </div>
 
-    <div className="mt-6 flex gap-3">
+    <div className="flex gap-3">
       <button
-        type="button"
-        onClick={() => setEditingContact(false)}
-        className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        onClick={saveProperty}
+        disabled={savingProperty}
+        className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+      >
+        {savingProperty ? "Saving..." : "Save Property"}
+      </button>
+
+      <button
+        onClick={() => setEditingProperty(false)}
+        disabled={savingProperty}
+        className="rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 hover:bg-gray-50"
       >
         Cancel
       </button>
-
-      <button
-        type="button"
-        onClick={savePropertyContact} 
-        disabled={savingContact}
-        className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-      >
-        {savingContact ? "Saving..." : "Save Client"}
-      </button>
     </div>
   </div>
+) : (
+  <div className="mt-6 grid gap-6 md:grid-cols-2">
+    <div>
+      <p className="text-sm text-gray-500">
+        Address
+      </p>
+      <p className="mt-1 font-medium text-gray-900">
+        {property.address || "Not provided"}
+      </p>
+    </div>
+
+    <div>
+      <p className="text-sm text-gray-500">
+        City
+      </p>
+      <p className="mt-1 font-medium text-gray-900">
+        {property.city || "Not provided"}
+      </p>
+    </div>
+
+    <div>
+      <p className="text-sm text-gray-500">
+        State
+      </p>
+      <p className="mt-1 font-medium text-gray-900">
+        {property.state || "Not provided"}
+      </p>
+    </div>
+
+    <div>
+      <p className="text-sm text-gray-500">
+        ZIP Code
+      </p>
+      <p className="mt-1 font-medium text-gray-900">
+      {property.zip_code || "Not provided"}
+      </p>
+    </div>
+
+    <div>
+      <p className="text-sm text-gray-500">
+        Property Type
+      </p>
+      <p className="mt-1 font-medium text-gray-900">
+        {property.property_type || "Not provided"}
+      </p>
+    </div>
+
+    <div>
+      <p className="text-sm text-gray-500">
+        Status
+      </p>
+      <p className="mt-1 font-medium text-gray-900">
+        {property.status || "Not provided"}
+      </p>
+    </div>
+
+      
+    
+  </div>
 )}
+      
 <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 shadow">
   <div className="flex items-center justify-between">
     <div>
@@ -1161,12 +1486,258 @@ const { data: workOrderData, error: workOrderError } = await supabase
     </div>
   </div>
 )}
+               </div>
+
+<div className="rounded-xl bg-white p-6 shadow">
+<div className="flex items-center justify-between">
+  <div>
+    <h2 className="text-xl font-semibold text-gray-900">
+      Property Contacts
+    </h2>
+
+    <p className="mt-1 text-sm text-gray-600">
+      People associated with this property.
+    </p>
+  </div>
+
+  <button
+    type="button"
+    onClick={() => {
+      setShowContactForm((current) => !current);
+      setContactFullName("");
+      setContactType("");
+      setContactEmail("");
+      setContactPhone("");
+    }}
+    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+  >
+    {showContactForm ? "Cancel" : "Add Contact"}
+  </button>
+</div>
+
+  <div className="mt-6">
+  {showContactForm && (
+  <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-5">
+    <h3 className="text-lg font-semibold text-gray-900">
+      Add Property Contact
+    </h3>
+
+    <div className="mt-4 grid gap-4 md:grid-cols-2">
+    <div>
+  <label className="text-sm font-medium text-gray-700">
+    Email
+  </label>
+
+  <input
+    type="email"
+    value={contactEmail}
+    onChange={(e) => setContactEmail(e.target.value)}
+    placeholder="email@example.com"
+    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+  />
+</div>
+<div>
+  <label className="text-sm font-medium text-gray-700">
+    Phone
+  </label>
+
+  <input
+    type="tel"
+    value={contactPhone}
+    onChange={(e) => setContactPhone(e.target.value)}
+    placeholder="(555) 555-5555"
+    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+  />
+</div>
+      <div>
+        <label className="text-sm font-medium text-gray-700">
+          Full Name
+        </label>
+        <input
+          type="text"
+          value={contactFullName}
+onChange={(e) => setContactFullName(e.target.value)}
+          placeholder="Contact name"
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">
+          Contact Type
+        </label>
+        <select
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          value={contactType}
+onChange={(e) => setContactType(e.target.value)}
+        >
+          <option value="">Select type</option>
+          <option value="Owner">Owner</option>
+          <option value="Property Manager">Property Manager</option>
+          <option value="Tenant">Tenant</option>
+          <option value="Vendor">Vendor</option>
+          <option value="Emergency Contact">Emergency Contact</option>
+          <option value="Other">Other</option>
+          </select>
+      </div>
+    </div>
+
+    <div className="mt-5 flex gap-3">
+      <button
+        type="button"
+        onClick={() => {
+          setShowContactForm(false);
+          setContactFullName("");
+          setContactType("");
+          setContactEmail("");
+          setContactPhone("");
+        }}
+        className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+      >
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        onClick={savePropertyContact}
+        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+      >
+        {editingContactId ? "Update Contact" : "Save Contact"}
+      </button>
+    </div>
+  </div>
+)}
+{propertyContacts.length > 0 && (
+  <div className="mt-6 space-y-4">
+    {propertyContacts.map((contact) => (
+      <div
+        key={contact.id}
+        className="rounded-lg border border-gray-200 bg-white p-5"
+      >
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {contact.full_name}
+            </h3>
+
+            {contact.contact_type && (
+              <p className="mt-1 text-sm text-gray-500">
+                {contact.contact_type}
+              </p>
+            )}
           </div>
+          <button
+    type="button"
+    onClick={() => {
+      setEditingContactId(contact.id);
+      setContactFullName(contact.full_name);
+      setContactType(contact.contact_type || "");
 
+      const emailMethod = contact.methods?.find(
+        (method) => method.method_type === "email"
+      );
+
+      const phoneMethod = contact.methods?.find(
+        (method) => method.method_type === "phone"
+      );
+
+      setContactEmail(emailMethod?.value || "");
+      setContactPhone(phoneMethod?.value || "");
+      setShowContactForm(true);
+    }}
+    className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+  >
+    Edit
+  </button>
+  <button
+  type="button"
+  onClick={() => deletePropertyContact(contact.id)}
+    className="rounded-lg border border-red-300 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+>
+  Delete
+</button>
         </div>
-      )}
 
-{activeTab === "Assets" && (
+        {contact.methods?.length > 0 && (
+          <div className="mt-4 space-y-2">
+            {contact.methods.map((method) => (
+              <div
+                key={method.id}
+                className="text-sm text-gray-700"
+              >
+                <span className="font-medium">
+                  {method.label}:
+                </span>{" "}
+                {method.value}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+)}
+    {loadingContacts ? (
+      <p className="text-sm text-gray-500">
+        Loading contacts...
+      </p>
+    ) : propertyContacts.length === 0 ? (
+      <p className="text-sm text-gray-500">
+        No contacts have been added to this property yet.
+      </p>
+    ) : (
+      <div className="space-y-4">
+        {propertyContacts.map((contact) => (
+          <div
+            key={contact.id}
+            className="rounded-lg border border-gray-200 p-4"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="font-semibold text-gray-900">
+                  {contact.full_name}
+                </h3>
+
+                {contact.contact_type && (
+                  <p className="mt-1 text-sm text-gray-500">
+                    {contact.contact_type}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {contact.methods.length > 0 && (
+              <div className="mt-3 space-y-1">
+                {contact.methods.map((method) => (
+                  <p
+                    key={method.id}
+                    className="text-sm text-gray-700"
+                  >
+                    <span className="font-medium">
+                      {method.label}:
+                    </span>{" "}
+                    {method.value}
+                  </p>
+                ))}
+              </div>
+            )}
+
+            {contact.notes && (
+              <p className="mt-3 whitespace-pre-wrap text-sm text-gray-600">
+                {contact.notes}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
+
+</div>
+)}
+
+{activeTab === "Assets" && ( 
   <div className="rounded-xl bg-white p-8 shadow">
     <div className="flex items-center justify-between">
       <div>
