@@ -110,88 +110,156 @@ const [editVendorNotes, setEditVendorNotes] = useState("");
   
     setWorkOrder(data);
     const hasVendorInformation =
-  editVendorCompany.trim() ||
-  editVendorContact.trim() ||
-  editVendorPhone.trim() ||
-  editVendorEmail.trim() ||
-  editVendorNotes.trim();
-
-if (hasVendorInformation) {
-  const { data: existingVendor, error: existingVendorError } =
-    await supabase
-      .from("work_order_vendors")
-      .select("id")
-      .eq("work_order_id", String(params.id))
-      .eq("organization_id", workOrder?.organization_id)
-      .maybeSingle();
-
-  if (existingVendorError) {
-    console.error("EXISTING VENDOR LOOKUP ERROR:", existingVendorError);
-    alert(`Work order saved, but vendor information could not be loaded.\n\n${existingVendorError.message}`);
-    return;
-  }
-
-  const vendorValues = {
-    company_name: editVendorCompany.trim() || "Vendor",
-    contact_name: editVendorContact.trim() || null,
-    phone: editVendorPhone.trim() || null,
-    email: editVendorEmail.trim() || null,
-    notes: editVendorNotes.trim() || null,
-  };
-
-  if (existingVendor) {
-    const { data: updatedVendor, error: vendorUpdateError } =
+    editVendorCompany.trim() ||
+    editVendorContact.trim() ||
+    editVendorPhone.trim() ||
+    editVendorEmail.trim() ||
+    editVendorNotes.trim();
+  
+  if (hasVendorInformation) {
+    const { data: existingVendor, error: existingVendorError } =
       await supabase
         .from("work_order_vendors")
-        .update(vendorValues)
-        .eq("id", existingVendor.id)
+        .select("id")
         .eq("work_order_id", String(params.id))
         .eq("organization_id", workOrder?.organization_id)
-        .select()
-        .single();
-
-    if (vendorUpdateError) {
-      console.error("VENDOR UPDATE ERROR:", vendorUpdateError);
-      alert(`Work order saved, but vendor information could not be updated.\n\n${vendorUpdateError.message}`);
+        .maybeSingle();
+  
+    if (existingVendorError) {
+      console.error("EXISTING VENDOR LOOKUP ERROR:", existingVendorError);
+      alert(
+        `Work order saved, but vendor information could not be loaded.\n\n${existingVendorError.message}`
+      );
       return;
     }
-
-    setVendor(updatedVendor);
-  } else {
-    const { data: newVendor, error: vendorInsertError } =
-      await supabase
-        .from("work_order_vendors")
+  
+    const vendorValues = {
+      company_name: editVendorCompany.trim() || "Vendor",
+      contact_name: editVendorContact.trim() || null,
+      phone: editVendorPhone.trim() || null,
+      email: editVendorEmail.trim() || null,
+      notes: editVendorNotes.trim() || null,
+    };
+  
+    if (existingVendor) {
+      const { data: updatedVendor, error: vendorUpdateError } =
+        await supabase
+          .from("work_order_vendors")
+          .update(vendorValues)
+          .eq("id", existingVendor.id)
+          .eq("work_order_id", String(params.id))
+          .eq("organization_id", workOrder?.organization_id)
+          .select()
+          .single();
+  
+      if (vendorUpdateError) {
+        console.error("VENDOR UPDATE ERROR:", vendorUpdateError);
+        alert(
+          `Work order saved, but vendor information could not be updated.\n\n${vendorUpdateError.message}`
+        );
+        return;
+      }
+  
+      setVendor(updatedVendor);
+  
+      const { error: activityError } = await supabase
+        .from("work_order_activity")
+        .insert({
+          work_order_id: String(params.id),
+          organization_id: workOrder?.organization_id, 
+          user_id: user.id,
+          activity_type: "vendor_updated",
+          description: `Vendor information updated: ${vendorValues.company_name}`,
+        });
+  
+      if (activityError) {
+        console.error("VENDOR ACTIVITY ERROR:", activityError);
+      }
+    } else {
+      const { data: newVendor, error: vendorInsertError } =
+        await supabase
+          .from("work_order_vendors")
+          .insert({
+            work_order_id: String(params.id),
+            organization_id: workOrder?.organization_id,
+            ...vendorValues,
+          })
+          .select()
+          .single();
+  
+      if (vendorInsertError) {
+        console.error("VENDOR INSERT ERROR:", vendorInsertError);
+        alert(
+          `Work order saved, but vendor information could not be added.\n\n${vendorInsertError.message}`
+        );
+        return;
+      }
+  
+      setVendor(newVendor);
+  
+      const { error: activityError } = await supabase
+        .from("work_order_activity")
         .insert({
           work_order_id: String(params.id),
           organization_id: workOrder?.organization_id,
-          ...vendorValues,
-        })
-        .select()
-        .single();
-
-    if (vendorInsertError) {
-      console.error("VENDOR INSERT ERROR:", vendorInsertError);
-      alert(`Work order saved, but vendor information could not be added.\n\n${vendorInsertError.message}`);
+          user_id: user.id,
+          activity_type: "vendor_added",
+          description: `Vendor added: ${vendorValues.company_name}`,
+        });
+  
+      if (activityError) {
+        console.error("VENDOR ACTIVITY ERROR:", activityError);
+      }
+    }
+  } else {
+    const { data: existingVendor, error: existingVendorError } =
+      await supabase
+        .from("work_order_vendors")
+        .select("id, company_name")
+        .eq("work_order_id", String(params.id))
+        .eq("organization_id", workOrder?.organization_id)
+        .maybeSingle();
+  
+    if (existingVendorError) {
+      console.error("EXISTING VENDOR LOOKUP ERROR:", existingVendorError);
+      alert(
+        `Work order saved, but vendor information could not be checked.\n\n${existingVendorError.message}`
+      );
       return;
     }
-
-    setVendor(newVendor);
+  
+    const { error: vendorDeleteError } = await supabase
+      .from("work_order_vendors")
+      .delete()
+      .eq("work_order_id", String(params.id))
+      .eq("organization_id", workOrder?.organization_id);
+  
+    if (vendorDeleteError) {
+      console.error("VENDOR DELETE ERROR:", vendorDeleteError);
+      alert(
+        `Work order saved, but vendor information could not be removed.\n\n${vendorDeleteError.message}`
+      );
+      return;
+    }
+  
+    setVendor(null);
+  
+    if (existingVendor) {
+      const { error: activityError } = await supabase
+        .from("work_order_activity")
+        .insert({
+          work_order_id: String(params.id),
+          organization_id: workOrder?.organization_id,
+          user_id: user.id,
+          activity_type: "vendor_removed",
+          description: `Vendor removed: ${existingVendor.company_name}`,
+        });
+  
+      if (activityError) {
+        console.error("VENDOR ACTIVITY ERROR:", activityError);
+      }
+    }
   }
-} else {
-  const { error: vendorDeleteError } = await supabase
-    .from("work_order_vendors")
-    .delete()
-    .eq("work_order_id", String(params.id))
-    .eq("organization_id", workOrder?.organization_id);
-
-  if (vendorDeleteError) {
-    console.error("VENDOR DELETE ERROR:", vendorDeleteError);
-    alert(`Work order saved, but vendor information could not be removed.\n\n${vendorDeleteError.message}`);
-    return;
-  }
-
-  setVendor(null);
-}
     const { data: activityData, error: activityError } = await supabase
   .from("work_order_activity")
   .select("*")
