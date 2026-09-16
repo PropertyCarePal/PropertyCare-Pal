@@ -2237,7 +2237,14 @@ onChange={(e) => setContactType(e.target.value)}
               <h3 className="text-lg font-semibold text-gray-900">
                 {workOrder.title}
               </h3>
-              <button
+              <Link
+  href={`/work-orders/${workOrder.id}`}
+  className="ml-3 rounded-lg border border-blue-300 px-3 py-1 text-sm text-blue-700 hover:bg-blue-50"
+>
+  View Work Order
+</Link>
+
+<button
   type="button"
   onClick={() => editWorkOrder(workOrder)}
   className="ml-3 rounded-lg border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50"
