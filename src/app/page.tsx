@@ -424,152 +424,242 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
   </div>
 </section>
   
-        <section className="mt-8">
-  <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-    Maintenance Attention
-  </h2>
+<section className="mt-8">
+  <div className="mb-4">
+    <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
+      Maintenance Attention
+    </h2>
 
-  <div className="grid gap-4 md:grid-cols-3">
+    <p className="mt-1 text-sm text-gray-500">
+      Items that may need your attention
+    </p>
+  </div>
+
+  <div className="grid gap-5 md:grid-cols-3">
     <button
       type="button"
       onClick={() => router.push("/work-orders")}
-      className="rounded-xl bg-white p-5 text-left shadow transition hover:shadow-md"
+      className="group rounded-2xl border border-red-100 bg-white p-6 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-red-200 hover:shadow-lg"
     >
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-red-700">
-          Overdue
-        </h3>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-red-700">
+            Overdue
+          </p>
 
-        <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-700">
-          {overdueMaintenance.length}
-        </span>
+          <p className="mt-4 text-4xl font-bold tracking-tight text-gray-900">
+            {overdueMaintenance.length}
+          </p>
+
+          <p className="mt-2 text-sm text-gray-500">
+            Active maintenance items past their due date
+          </p>
+        </div>
+
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-700">
+          <span className="text-lg font-bold">!</span>
+        </div>
       </div>
 
-      <p className="mt-3 text-sm text-gray-500">
-        Active maintenance items past their due date
+      <p className="mt-5 text-sm font-semibold text-red-700">
+        View work orders →
       </p>
     </button>
 
     <button
       type="button"
       onClick={() => router.push("/work-orders")}
-      className="rounded-xl bg-white p-5 text-left shadow transition hover:shadow-md"
+      className="group rounded-2xl border border-orange-100 bg-white p-6 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-lg"
     >
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-orange-700">
-          High Priority
-        </h3>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-orange-700">
+            High Priority
+          </p>
 
-        <span className="rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-700">
-          {highPriorityMaintenance.length}
-        </span>
+          <p className="mt-4 text-4xl font-bold tracking-tight text-gray-900">
+            {highPriorityMaintenance.length}
+          </p>
+
+          <p className="mt-2 text-sm text-gray-500">
+            Active high-priority maintenance items
+          </p>
+        </div>
+
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-700">
+          <span className="text-lg font-bold">!</span>
+        </div>
       </div>
 
-      <p className="mt-3 text-sm text-gray-500">
-        Active high-priority maintenance items
+      <p className="mt-5 text-sm font-semibold text-orange-700">
+        View work orders →
       </p>
     </button>
 
     <button
       type="button"
       onClick={() => router.push("/work-orders")}
-      className="rounded-xl bg-white p-5 text-left shadow transition hover:shadow-md"
+      className="group rounded-2xl border border-yellow-100 bg-white p-6 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-yellow-200 hover:shadow-lg"
     >
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-yellow-700">
-          Due Soon
-        </h3>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-yellow-700">
+            Due Soon
+          </p>
 
-        <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-semibold text-yellow-700">
-          {dueSoonMaintenance.length}
-        </span>
+          <p className="mt-4 text-4xl font-bold tracking-tight text-gray-900">
+            {dueSoonMaintenance.length}
+          </p>
+
+          <p className="mt-2 text-sm text-gray-500">
+            Active maintenance due within 7 days
+          </p>
+        </div>
+
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-yellow-50 text-yellow-700">
+          <span className="text-lg font-bold">⏱</span>
+        </div>
       </div>
 
-      <p className="mt-3 text-sm text-gray-500">
-        Active maintenance due within 7 days
+      <p className="mt-5 text-sm font-semibold text-yellow-700">
+        View work orders →
       </p>
     </button>
   </div>
 </section>
-        <section className="mt-8">
-          <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-            Maintenance Status
-          </h2>
+<section className="mt-8">
+  <div className="mb-4">
+    <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
+      Maintenance Status
+    </h2>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <button
-              type="button"
-              onClick={() => router.push("/work-orders")}
-              className="rounded-xl bg-white p-5 text-left shadow transition hover:shadow-md"
-            >
-              <p className="text-sm font-medium text-gray-500">
-                Open
-              </p>
+    <p className="mt-1 text-sm text-gray-500">
+      Current status of your maintenance work orders
+    </p>
+  </div>
 
-              <p className="mt-2 text-3xl font-bold text-blue-700">
-                {openWorkOrders.length}
-              </p>
+  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <button
+      type="button"
+      onClick={() => router.push("/work-orders")}
+      className="group rounded-2xl border border-blue-100 bg-white p-6 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-blue-700">
+            Open
+          </p>
 
-              <p className="mt-1 text-sm text-gray-500">
-                Work orders
-              </p>
-            </button>
+          <p className="mt-4 text-4xl font-bold tracking-tight text-gray-900">
+            {openWorkOrders.length}
+          </p>
 
-            <button
-              type="button"
-              onClick={() => router.push("/work-orders")}
-              className="rounded-xl bg-white p-5 text-left shadow transition hover:shadow-md"
-            >
-              <p className="text-sm font-medium text-gray-500">
-                In Progress
-              </p>
+          <p className="mt-2 text-sm text-gray-500">
+            Work orders
+          </p>
+        </div>
 
-              <p className="mt-2 text-3xl font-bold text-orange-600">
-                {inProgressWorkOrders.length}
-              </p>
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+          <span className="text-lg font-bold">O</span>
+        </div>
+      </div>
 
-              <p className="mt-1 text-sm text-gray-500">
-                Work orders
-              </p>
-            </button>
+      <p className="mt-5 text-sm font-semibold text-blue-700">
+        View work orders →
+      </p>
+    </button>
 
-            <button
-              type="button"
-              onClick={() => router.push("/work-orders")}
-              className="rounded-xl bg-white p-5 text-left shadow transition hover:shadow-md"
-            >
-              <p className="text-sm font-medium text-gray-500">
-                Completed
-              </p>
+    <button
+      type="button"
+      onClick={() => router.push("/work-orders")}
+      className="group rounded-2xl border border-orange-100 bg-white p-6 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-lg"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-orange-700">
+            In Progress
+          </p>
 
-              <p className="mt-2 text-3xl font-bold text-green-700">
-                {completedWorkOrders.length}
-              </p>
+          <p className="mt-4 text-4xl font-bold tracking-tight text-gray-900">
+            {inProgressWorkOrders.length}
+          </p>
 
-              <p className="mt-1 text-sm text-gray-500">
-                Work orders
-              </p>
-            </button>
+          <p className="mt-2 text-sm text-gray-500">
+            Work orders
+          </p>
+        </div>
 
-            <button
-              type="button"
-              onClick={() => router.push("/work-orders")}
-              className="rounded-xl bg-white p-5 text-left shadow transition hover:shadow-md"
-            >
-              <p className="text-sm font-medium text-gray-500">
-                Cancelled
-              </p>
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-700">
+          <span className="text-lg font-bold">I</span>
+        </div>
+      </div>
 
-              <p className="mt-2 text-3xl font-bold text-gray-500">
-                {cancelledWorkOrders.length}
-              </p>
+      <p className="mt-5 text-sm font-semibold text-orange-700">
+        View work orders →
+      </p>
+    </button>
 
-              <p className="mt-1 text-sm text-gray-500">
-                Work orders
-              </p>
-            </button>
-          </div>
-        </section>
+    <button
+      type="button"
+      onClick={() => router.push("/work-orders")}
+      className="group rounded-2xl border border-green-100 bg-white p-6 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-green-200 hover:shadow-lg"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-green-700">
+            Completed
+          </p>
+
+          <p className="mt-4 text-4xl font-bold tracking-tight text-gray-900">
+            {completedWorkOrders.length}
+          </p>
+
+          <p className="mt-2 text-sm text-gray-500">
+            Work orders
+          </p>
+        </div>
+
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-700">
+          <span className="text-lg font-bold">✓</span>
+        </div>
+      </div>
+
+      <p className="mt-5 text-sm font-semibold text-green-700">
+        View work orders →
+      </p>
+    </button>
+
+    <button
+      type="button"
+      onClick={() => router.push("/work-orders")}
+      className="group rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-lg"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-gray-600">
+            Cancelled
+          </p>
+
+          <p className="mt-4 text-4xl font-bold tracking-tight text-gray-900">
+            {cancelledWorkOrders.length}
+          </p>
+
+          <p className="mt-2 text-sm text-gray-500">
+            Work orders
+          </p>
+        </div>
+
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600">
+          <span className="text-lg font-bold">C</span>
+        </div>
+      </div>
+
+      <p className="mt-5 text-sm font-semibold text-gray-600">
+        View work orders →
+      </p>
+    </button>
+  </div>
+</section>
       
 <section className="mt-8">
   <h2 className="mb-4 text-2xl font-semibold text-gray-900">
