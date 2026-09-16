@@ -662,17 +662,25 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
 </section>
       
 <section className="mt-8">
-  <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-    Recent Maintenance Activity
-  </h2>
+  <div className="mb-4">
+    <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
+      Recent Maintenance Activity
+    </h2>
 
-  <div className="rounded-xl bg-white p-6 shadow">
+    <p className="mt-1 text-sm text-gray-500">
+      Recently completed maintenance work
+    </p>
+  </div>
+
+  <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
     {recentMaintenanceWorkOrders.length === 0 ? (
-      <p className="text-sm text-gray-500">
-        No completed maintenance activity yet.
-      </p>
+      <div className="p-6">
+        <p className="text-sm text-gray-500">
+          No completed maintenance activity yet.
+        </p>
+      </div>
     ) : (
-      <div className="space-y-3">
+      <div className="divide-y divide-gray-100">
         {recentMaintenanceWorkOrders.map((workOrder) => (
           <button
             key={workOrder.id}
@@ -680,20 +688,26 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
             onClick={() =>
               router.push(`/work-orders/${workOrder.id}`)
             }
-            className="flex w-full items-center justify-between gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 text-left transition hover:bg-gray-100"
+            className="group flex w-full items-center justify-between gap-4 p-5 text-left transition-colors hover:bg-gray-50"
           >
-            <div className="min-w-0">
-              <p className="truncate font-semibold text-gray-900">
-                {workOrder.title}
-              </p>
+            <div className="flex min-w-0 items-center gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-700">
+                <span className="text-lg font-bold">✓</span>
+              </div>
 
-              <p className="mt-1 text-sm text-gray-500">
-                Completed{" "}
-                {formatCompletedDate(workOrder.completed_at)}
-              </p>
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-gray-900">
+                  {workOrder.title}
+                </p>
+
+                <p className="mt-1 text-sm text-gray-500">
+                  Completed{" "}
+                  {formatCompletedDate(workOrder.completed_at)}
+                </p>
+              </div>
             </div>
 
-            <span className="shrink-0 text-sm font-medium text-blue-600">
+            <span className="shrink-0 text-sm font-semibold text-[#102A43] transition-colors group-hover:text-blue-700">
               View →
             </span>
           </button>
