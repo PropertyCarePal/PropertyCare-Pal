@@ -778,18 +778,37 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
         ))}
       </div>
     )}
-  </div>
+    </div>
 </section>
-        <section className="mt-8">
-  <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-    Property Activity
-  </h2>
+
+<section className="mt-8">
+  <div className="mb-4">
+    <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
+      Property Activity
+    </h2>
+
+    <p className="mt-1 text-sm text-gray-500">
+      Properties with active maintenance work
+    </p>
+  </div>
 
   {Object.keys(propertyActivity).length === 0 ? (
-    <div className="rounded-xl bg-white p-6 shadow">
-      <p className="text-gray-500">
-        No properties currently have active maintenance work.
-      </p>
+    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-500">
+          <span className="text-sm font-bold">P</span>
+        </div>
+
+        <div>
+          <p className="font-semibold text-gray-900">
+            No active maintenance
+          </p>
+
+          <p className="mt-1 text-sm text-gray-500">
+            No properties currently have active maintenance work.
+          </p>
+        </div>
+      </div>
     </div>
   ) : (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -801,38 +820,57 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
             key={propertyId}
             type="button"
             onClick={() => router.push(`/properties/${propertyId}`)}
-            className="rounded-xl bg-white p-5 text-left shadow transition hover:shadow-md"
+            className="group rounded-2xl border border-gray-200 bg-white p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
           >
             <div className="flex items-start justify-between gap-4">
-              <h3 className="font-semibold text-gray-900">
-                {activity.propertyName}
-              </h3>
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                  <span className="text-sm font-bold">P</span>
+                </div>
+
+                <div className="min-w-0">
+                  <h3 className="truncate font-semibold text-gray-900">
+                    {activity.propertyName}
+                  </h3>
+
+                  <p className="mt-1 text-xs font-medium uppercase tracking-wide text-gray-400">
+                    Property
+                  </p>
+                </div>
+              </div>
 
               {activity.overdueCount > 0 && (
-                <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">
+                <span className="shrink-0 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
                   {activity.overdueCount} overdue
                 </span>
               )}
             </div>
 
-            <p className="mt-3 text-3xl font-bold text-gray-900">
-              {activity.activeCount}
-            </p>
+            <div className="mt-5">
+              <p className="text-3xl font-bold tracking-tight text-gray-900">
+                {activity.activeCount}
+              </p>
 
-            <p className="text-sm text-gray-500">
-              Active maintenance{" "}
-              {activity.activeCount === 1 ? "item" : "items"}
-            </p>
+              <p className="mt-1 text-sm text-gray-500">
+                Active maintenance{" "}
+                {activity.activeCount === 1 ? "item" : "items"}
+              </p>
+            </div>
 
-            <p className="mt-3 text-sm font-medium text-gray-600">
-              View property →
-            </p>
+            <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
+              <span className="text-sm font-medium text-gray-500">
+                View property
+              </span>
+
+              <span className="text-sm font-semibold text-[#102A43] transition-colors group-hover:text-blue-700">
+                View →
+              </span>
+            </div>
           </button>
         ))}
     </div>
   )}
 </section>
-
        
         <section className="mt-8 rounded-xl bg-white p-6 shadow">
           <h2 className="mb-4 text-xl font-semibold">
@@ -864,7 +902,7 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
               View Assets
             </button>
           </div>
-        </section>
+          </section>
       </div>
     </AppLayout>
   );
