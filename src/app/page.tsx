@@ -872,37 +872,96 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
   )}
 </section>
        
-        <section className="mt-8 rounded-xl bg-white p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold">
-            Quick Actions
-          </h2>
+<section className="mt-8">
+  <div className="mb-4">
+    <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
+      Quick Actions
+    </h2>
+    <p className="mt-1 text-sm text-gray-500">
+      Quickly access common property management tasks
+    </p>
+  </div>
 
-          <div className="flex flex-wrap gap-4">
-            <button
-              type="button"
-              onClick={() => router.push("/properties")}
-              className="rounded-lg bg-black px-5 py-3 text-white hover:bg-gray-800"
-            >
-              Add Property
-            </button>
-
-            <button
-              type="button"
-              onClick={() => router.push("/work-orders")}
-              className="rounded-lg bg-black px-5 py-3 text-white hover:bg-gray-800"
-            >
-              Create Work Order
-            </button>
-
-            <button
-              type="button"
-              onClick={() => router.push("/assets")}
-              className="rounded-lg bg-black px-5 py-3 text-white hover:bg-gray-800"
-            >
-              View Assets
-            </button>
+  <div className="grid gap-4 md:grid-cols-3">
+    <button
+      type="button"
+      onClick={() => router.push("/properties")}
+      className="group rounded-2xl border border-gray-200 bg-white p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+            <span className="text-sm font-bold">+</span>
           </div>
-          </section>
+
+          <h3 className="mt-4 font-semibold text-gray-900">
+            Add Property
+          </h3>
+
+          <p className="mt-1 text-sm text-gray-500">
+            Add a new property to your portfolio.
+          </p>
+        </div>
+
+        <span className="text-sm font-semibold text-[#102A43] transition-colors group-hover:text-blue-700">
+          →
+        </span>
+      </div>
+    </button>
+
+    <button
+      type="button"
+      onClick={() => router.push("/work-orders")}
+      className="group rounded-2xl border border-gray-200 bg-white p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+            <span className="text-sm font-bold">W</span>
+          </div>
+
+          <h3 className="mt-4 font-semibold text-gray-900">
+            Create Work Order
+          </h3>
+
+          <p className="mt-1 text-sm text-gray-500">
+            Create and manage maintenance work.
+          </p>
+        </div>
+
+        <span className="text-sm font-semibold text-[#102A43] transition-colors group-hover:text-blue-700">
+          →
+        </span>
+      </div>
+    </button>
+
+    <button
+      type="button"
+      onClick={() => router.push("/assets")}
+      className="group rounded-2xl border border-gray-200 bg-white p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+            <span className="text-sm font-bold">A</span>
+          </div>
+
+          <h3 className="mt-4 font-semibold text-gray-900">
+            View Assets
+          </h3>
+
+          <p className="mt-1 text-sm text-gray-500">
+            Review and manage property assets.
+          </p>
+        </div>
+
+        <span className="text-sm font-semibold text-[#102A43] transition-colors group-hover:text-blue-700">
+          →
+        </span>
+      </div>
+    </button>
+  </div>
+</section>
       </div>
     </AppLayout>
   );
