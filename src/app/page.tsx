@@ -330,51 +330,100 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
       year: "numeric",
     });
   }
-
   return (
     <AppLayout>
       <div className="mx-auto max-w-7xl">
-        <header className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">
-            PropertyCare Pal
-          </h1>
+      <header className="mb-10">
+  <div className="flex items-center gap-5">
+    <img
+      src="/brand/propertycare-pal-logo.png"
+      alt="PropertyCare Pal"
+      className="h-40 w-auto object-contain"
+    />
 
-          <p className="mt-2 text-gray-600">
-            Property maintenance management made simple.
-          </p>
-        </header>
+<div className="border-l border-gray-200 pl-5">
+      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#102A43]">
+       
+      </p>
 
-        <section className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-xl bg-white p-6 shadow">
-            <h2 className="text-lg font-semibold">Properties</h2>
-            <p className="mt-4 text-4xl font-bold">
-  {propertyCount}
-</p>
-            <p className="text-gray-500">
-              Active properties managed
-            </p>
-          </div>
+      <h1 className="mt-1 text-4xl font-bold tracking-tight text-gray-900">
+       
+      </h1>
 
-          <div className="rounded-xl bg-white p-6 shadow">
-            <h2 className="text-lg font-semibold">Service Requests</h2>
-            <p className="mt-4 text-4xl font-bold">
-              {activeWorkOrders.length}
-            </p>
-            <p className="text-gray-500">
-              Active maintenance items
-            </p>
-          </div>
+      <p className="mt-2 text-base text-gray-500">
+       
+      </p>
+    </div>
+  </div>
+  </header>
+  <section className="grid gap-5 md:grid-cols-3">
+  <div className="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+    <div className="flex items-start justify-between">
+      <div>
+        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#102A43]">
+          Properties
+        </p>
 
-          <div className="rounded-xl bg-white p-6 shadow">
-            <h2 className="text-lg font-semibold">Assets</h2>
-            <p className="mt-4 text-4xl font-bold">
-  {assetCount}
-</p>
-            <p className="text-gray-500">
-              Tracked property assets
-            </p>
-          </div>
-        </section>
+        <p className="mt-4 text-4xl font-bold tracking-tight text-[#102A43]">
+          {propertyCount}
+        </p>
+
+        <p className="mt-2 text-sm text-gray-500">
+          Active properties managed
+        </p>
+      </div>
+
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+        <span className="text-lg font-bold">P</span>
+      </div>
+    </div>
+  </div>
+
+  <div className="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+    <div className="flex items-start justify-between">
+      <div>
+        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#102A43]">
+          Service Requests
+        </p>
+
+        <p className="mt-4 text-4xl font-bold tracking-tight text-[#102A43]">
+          {activeWorkOrders.length}
+        </p>
+
+        <p className="mt-2 text-sm text-gray-500">
+          Active maintenance items
+        </p>
+      </div>
+
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+        <span className="text-lg font-bold">S</span>
+      </div>
+    </div>
+  </div>
+
+  <div className="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+    <div className="flex items-start justify-between">
+      <div>
+        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#102A43]">
+          Assets
+        </p>
+
+        <p className="mt-4 text-4xl font-bold tracking-tight text-[#102A43]">
+          {assetCount}
+        </p>
+
+        <p className="mt-2 text-sm text-gray-500">
+          Tracked property assets
+        </p>
+      </div>
+
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+        <span className="text-lg font-bold">A</span>
+      </div>
+    </div>
+  </div>
+</section>
+  
         <section className="mt-8">
   <h2 className="mb-4 text-2xl font-semibold text-gray-900">
     Maintenance Attention
