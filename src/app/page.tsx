@@ -717,17 +717,25 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
   </div>
 </section>
 <section className="mt-8">
-  <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-    Upcoming Maintenance Calendar
-  </h2>
+  <div className="mb-4">
+    <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
+      Upcoming Maintenance Calendar
+    </h2>
 
-  <div className="rounded-xl bg-white p-6 shadow">
+    <p className="mt-1 text-sm text-gray-500">
+      Maintenance scheduled over the next 7 days
+    </p>
+  </div>
+
+  <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
     {upcomingMaintenanceByDate.length === 0 ? (
-      <p className="text-sm text-gray-500">
-        No upcoming maintenance scheduled.
-      </p>
+      <div className="p-6">
+        <p className="text-sm text-gray-500">
+          No upcoming maintenance scheduled.
+        </p>
+      </div>
     ) : (
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 p-5 md:grid-cols-2 lg:grid-cols-3">
         {upcomingMaintenanceByDate.map((workOrder) => (
           <button
             key={workOrder.id}
@@ -735,20 +743,36 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
             onClick={() =>
               router.push(`/work-orders/${workOrder.id}`)
             }
-            className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-left transition hover:bg-gray-100"
+            className="group rounded-xl border border-gray-200 bg-gray-50 p-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:bg-white hover:shadow-md"
           >
-            <p className="font-semibold text-gray-900">
-              {workOrder.title}
-            </p>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                  <span className="text-sm font-bold">M</span>
+                </div>
 
-            <p className="mt-1 text-sm text-gray-500">
-              Due {formatDate(workOrder.due_date)}
-            </p>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-gray-900">
+                    {workOrder.title}
+                  </p>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    Due {formatDate(workOrder.due_date)}
+                  </p>
+                </div>
+              </div>
+
+              <span className="shrink-0 text-sm font-semibold text-[#102A43] transition-colors group-hover:text-blue-700">
+                View →
+              </span>
+            </div>
 
             {workOrder.priority && (
-              <span className="mt-3 inline-block rounded-full bg-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-700">
-                {workOrder.priority}
-              </span>
+              <div className="mt-4">
+                <span className="inline-flex rounded-full bg-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-700">
+                  {workOrder.priority} priority
+                </span>
+              </div>
             )}
           </button>
         ))}
