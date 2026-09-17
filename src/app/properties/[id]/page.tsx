@@ -2216,421 +2216,644 @@ const { data: workOrderData, error: workOrderError } = await supabase
 
 
 {activeTab === "Work Orders" && (
-  <div className="rounded-xl bg-white p-8 shadow">
-<div className="flex items-center justify-between">
-  <div>
-    <h2 className="text-2xl font-semibold text-gray-900">
-      Work Orders
-    </h2>
+  <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+    {/* Header */}
+    <div className="border-b border-gray-200 px-8 py-7">
+      <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                className="h-5 w-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 5h6M9 3h6a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h1V4a1 1 0 0 1 1-1Z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="m9 11 2 2 4-4M9 17h6"
+                />
+              </svg>
+            </div>
 
-    <p className="mt-2 text-gray-600">
-      Maintenance work orders will appear here.
-    </p>
-  </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">
+                Property Maintenance
+              </p>
 
-  <button
-    onClick={() => setShowWorkOrderForm(!showWorkOrderForm)}
-    className="rounded-lg bg-emerald-600 px-5 py-3 text-white hover:bg-emerald-700"
-  >
-    {showWorkOrderForm ? "Cancel" : "Add Work Order"}
-  </button>
-</div>
+              <h2 className="mt-1 text-2xl font-semibold tracking-tight text-gray-900">
+                Work Orders
+              </h2>
+            </div>
+          </div>
 
-{/* Property Work Order Calendar */}
-<div className="mt-8 rounded-xl border border-gray-200 bg-white p-6">
-  <div className="flex items-center justify-between">
-    <button
-      type="button"
-      onClick={() =>
-        setCalendarDate(
-          new Date(
-            calendarDate.getFullYear(),
-            calendarDate.getMonth() - 1,
-            1
-          )
-        )
-      }
-      className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-    >
-      ← Previous
-    </button>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-gray-600">
+            Schedule, assign, track, and manage maintenance work for this
+            property.
+          </p>
+        </div>
 
-    <div className="text-center">
-      <h3 className="text-xl font-semibold text-gray-900">
-        {formatCalendarMonth(calendarDate)}
-      </h3>
-      <p className="mt-1 text-sm text-gray-500">
-        Scheduled property work
-      </p>
+        <button
+          type="button"
+          onClick={() => setShowWorkOrderForm(!showWorkOrderForm)}
+          className="inline-flex items-center justify-center rounded-xl bg-[#102A43] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#163B5C]"
+        >
+          {showWorkOrderForm ? "Cancel" : "Add Work Order"}
+        </button>
+      </div>
     </div>
 
-    <button
-      type="button"
-      onClick={() =>
-        setCalendarDate(
-          new Date(
-            calendarDate.getFullYear(),
-            calendarDate.getMonth() + 1,
-            1
-          )
-        )
-      }
-      className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-    >
-      Next →
-    </button>
-  </div>
+    {/* Calendar */}
+    <div className="border-b border-gray-200 bg-gray-50/50 px-8 py-7">
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-4 border-b border-gray-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+          <button
+            type="button"
+            onClick={() =>
+              setCalendarDate(
+                new Date(
+                  calendarDate.getFullYear(),
+                  calendarDate.getMonth() - 1,
+                  1
+                )
+              )
+            }
+            className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+          >
+            ← Previous
+          </button>
 
-  <div className="mt-6 grid grid-cols-7 border-l border-t border-gray-200">
-    {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
-      (day) => (
-        <div
-          key={day}
-          className="border-b border-r border-gray-200 bg-gray-50 p-3 text-center text-sm font-semibold text-gray-600"
-        >
-          {day}
+          <div className="text-center">
+            <h3 className="text-xl font-semibold tracking-tight text-gray-900">
+              {formatCalendarMonth(calendarDate)}
+            </h3>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Scheduled property work
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              setCalendarDate(
+                new Date(
+                  calendarDate.getFullYear(),
+                  calendarDate.getMonth() + 1,
+                  1
+                )
+              )
+            }
+            className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+          >
+            Next →
+          </button>
         </div>
-      )
+
+        <div className="overflow-x-auto">
+          <div className="min-w-[760px]">
+            <div className="mt-0 grid grid-cols-7 border-l border-t border-gray-200">
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                (day) => (
+                  <div
+                    key={day}
+                    className="border-b border-r border-gray-200 bg-gray-50 p-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500"
+                  >
+                    {day}
+                  </div>
+                )
+              )}
+
+              {getCalendarDays(calendarDate).map((day, index) => {
+                if (!day) {
+                  return (
+                    <div
+                      key={`empty-${index}`}
+                      className="min-h-[120px] border-b border-r border-gray-200 bg-gray-50"
+                    />
+                  );
+                }
+
+                const dateString = formatCalendarDate(day);
+
+                const dayWorkOrders = workOrders.filter(
+                  (workOrder) => workOrder.due_date === dateString
+                );
+
+                const isToday =
+                  formatCalendarDate(new Date()) === dateString;
+
+                return (
+                  <div
+                    key={dateString}
+                    className={
+                      "min-h-[120px] border-b border-r border-gray-200 p-2 " +
+                      (isToday ? "bg-blue-50/60" : "bg-white")
+                    }
+                  >
+                    <div
+                      className={
+                        "mb-2 flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold " +
+                        (isToday
+                          ? "bg-[#102A43] text-white"
+                          : "text-gray-700")
+                      }
+                    >
+                      {day.getDate()}
+                    </div>
+
+                    <div className="space-y-1.5">
+                      {dayWorkOrders.map((workOrder) => {
+                        const completed =
+                          workOrder.status === "Completed";
+
+                        const cancelled =
+                          workOrder.status === "Cancelled";
+
+                        return (
+                          <Link
+                            key={workOrder.id}
+                            href={`/work-orders/${workOrder.id}`}
+                            className={
+                              "block rounded-lg px-2.5 py-2 text-xs font-semibold transition " +
+                              (completed
+                                ? "bg-gray-200 text-gray-500 line-through"
+                                : cancelled
+                                  ? "bg-gray-100 text-gray-400 line-through"
+                                  : `${getTeamMemberColor(
+                                      workOrder.assigned_user_id
+                                    )} text-white hover:opacity-90`)
+                            }
+                          >
+                            {workOrder.title}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-5 border-t border-gray-200 px-6 py-4 text-xs sm:text-sm">
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded bg-emerald-600" />
+            <span className="text-gray-600">Scheduled / Active</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded bg-gray-200" />
+            <span className="text-gray-600">Completed</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded bg-gray-100" />
+            <span className="text-gray-600">Cancelled</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Add / Edit Work Order Form */}
+    {showWorkOrderForm && (
+      <div className="border-b border-gray-200 bg-gray-50/70 px-8 py-7">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div>
+            <h3 className="text-lg font-semibold tracking-tight text-gray-900">
+              {editingWorkOrderId
+                ? "Edit Work Order"
+                : "Add New Work Order"}
+            </h3>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Enter the maintenance details and assign the work to a team
+              member.
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-5 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Work Order Title
+              </label>
+
+              <input
+                placeholder="e.g. Pool equipment inspection"
+                value={workOrderTitle}
+                onChange={(e) => setWorkOrderTitle(e.target.value)}
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Description
+              </label>
+
+              <textarea
+                placeholder="Describe the maintenance request..."
+                value={workOrderDescription}
+                onChange={(e) =>
+                  setWorkOrderDescription(e.target.value)
+                }
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                rows={4}
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Priority
+              </label>
+
+              <select
+                value={workOrderPriority}
+                onChange={(e) =>
+                  setWorkOrderPriority(e.target.value)
+                }
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="Low">Low Priority</option>
+                <option value="Medium">Medium Priority</option>
+                <option value="High">High Priority</option>
+                <option value="Urgent">Urgent</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Due Date
+              </label>
+
+              <input
+                type="date"
+                value={workOrderDueDate}
+                onChange={(e) =>
+                  setWorkOrderDueDate(e.target.value)
+                }
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Status
+              </label>
+
+              <select
+                value={workOrderStatus}
+                onChange={(e) =>
+                  setWorkOrderStatus(e.target.value)
+                }
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="Open">Open</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Assigned To
+              </label>
+
+              <select
+                value={workOrderAssignedUserId}
+                onChange={(e) =>
+                  setWorkOrderAssignedUserId(e.target.value)
+                }
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="">Unassigned</option>
+
+                {teamMembers.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.full_name || "Unnamed Team Member"}
+                    {member.role ? ` — ${member.role}` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Estimated Cost
+              </label>
+
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={workOrderEstimatedCost}
+                onChange={(e) =>
+                  setWorkOrderEstimatedCost(e.target.value)
+                }
+                placeholder="0.00"
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Actual Cost
+              </label>
+
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={workOrderActualCost}
+                onChange={(e) =>
+                  setWorkOrderActualCost(e.target.value)
+                }
+                placeholder="0.00"
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Completion Notes
+              </label>
+
+              <textarea
+                value={workOrderCompletionNotes}
+                onChange={(e) =>
+                  setWorkOrderCompletionNotes(e.target.value)
+                }
+                placeholder="Describe the work completed..."
+                rows={4}
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={addWorkOrder}
+              className="rounded-xl bg-[#102A43] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#163B5C]"
+            >
+              {editingWorkOrderId
+                ? "Save Changes"
+                : "Save Work Order"}
+            </button>
+
+            {editingWorkOrderId && (
+              <button
+                type="button"
+                onClick={deleteWorkOrder}
+                className="rounded-xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-100"
+              >
+                Delete Work Order
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
     )}
 
-    {getCalendarDays(calendarDate).map((day, index) => {
-      if (!day) {
-        return (
-          <div
-            key={`empty-${index}`}
-            className="min-h-[120px] border-b border-r border-gray-200 bg-gray-50"
-          />
-        );
-      }
-
-      const dateString = formatCalendarDate(day);
-
-      const dayWorkOrders = workOrders.filter(
-        (workOrder) => workOrder.due_date === dateString
-      );
-
-      const isToday =
-        formatCalendarDate(new Date()) === dateString;
-
-      return (
-        <div
-          key={dateString}
-          className={
-            "min-h-[120px] border-b border-r border-gray-200 p-2 " +
-            (isToday ? "bg-emerald-50" : "bg-white")
-          }
-        >
-          <div
-            className={
-              "mb-2 text-sm font-semibold " +
-              (isToday
-                ? "text-emerald-700"
-                : "text-gray-700")
-            }
-          >
-            {day.getDate()}
-          </div>
-
-          <div className="space-y-1">
-            {dayWorkOrders.map((workOrder) => {
-              const completed =
-                workOrder.status === "Completed";
-
-              const cancelled =
-                workOrder.status === "Cancelled";
-
-              return (
-                <Link
-                  key={workOrder.id}
-                  href={`/work-orders/${workOrder.id}`}
-                  className={
-                    "block rounded-md px-2 py-1 text-xs font-semibold transition " +
-                    (completed
-                      ? "bg-gray-200 text-gray-500 line-through"
-                      : cancelled
-                        ? "bg-gray-100 text-gray-400 line-through"
-                        : `${getTeamMemberColor(workOrder.assigned_user_id)} text-white`)
-                  }
-                >
-                  {workOrder.title}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      );
-    })}
-  </div>
-
-  <div className="mt-4 flex flex-wrap gap-4 text-sm">
-    <div className="flex items-center gap-2">
-      <span className="h-3 w-3 rounded bg-emerald-600" />
-      <span className="text-gray-600">
-        Scheduled / Active
-      </span>
-    </div>
-
-    <div className="flex items-center gap-2">
-      <span className="h-3 w-3 rounded bg-gray-200" />
-      <span className="text-gray-600">
-        Completed
-      </span>
-    </div>
-
-    <div className="flex items-center gap-2">
-      <span className="h-3 w-3 rounded bg-gray-100" />
-      <span className="text-gray-600">
-        Cancelled
-      </span>
-    </div>
-  </div>
-</div>
-{showWorkOrderForm && (
-  <div className="mt-6 rounded-xl border border-gray-200 p-6">
-    <h3 className="text-xl font-semibold text-gray-900">
-      Add New Work Order
-    </h3>
-
-    <div className="mt-5">
-      <input
-        placeholder="Work Order Title"
-        value={workOrderTitle}
-        onChange={(e) => setWorkOrderTitle(e.target.value)}
-        className="w-full rounded-lg border p-3"
-      />
-      <textarea
-  placeholder="Description"
-  value={workOrderDescription}
-  onChange={(e) => setWorkOrderDescription(e.target.value)}
-  className="mt-4 w-full rounded-lg border p-3"
-  rows={4}
-/>
-<select
-  value={workOrderPriority}
-  onChange={(e) => setWorkOrderPriority(e.target.value)}
-  className="mt-4 w-full rounded-lg border p-3"
->
-  <option value="Low">Low Priority</option>
-  <option value="Medium">Medium Priority</option>
-  <option value="High">High Priority</option>
-  <option value="Urgent">Urgent</option>
-</select>
-<input
-  type="date"
-  value={workOrderDueDate}
-  onChange={(e) => setWorkOrderDueDate(e.target.value)}
-  className="mt-4 w-full rounded-lg border p-3"
-/>
-<select
-  value={workOrderStatus}
-  onChange={(e) => setWorkOrderStatus(e.target.value)}
-  className="mt-4 w-full rounded-lg border p-3"
->
-  <option value="Open">Open</option>
-  <option value="In Progress">In Progress</option>
-  <option value="Completed">Completed</option>
-  <option value="Cancelled">Cancelled</option>
-</select>
-
-<div className="mt-4">
-  <label className="block text-sm font-medium text-gray-700">
-    Assigned To
-  </label>
-
-  <select
-    value={workOrderAssignedUserId}
-    onChange={(e) => setWorkOrderAssignedUserId(e.target.value)}
-    className="mt-1 w-full rounded-lg border border-gray-300 p-3"
-  >
-    <option value="">Unassigned</option>
-
-    {teamMembers.map((member) => (
-      <option key={member.id} value={member.id}>
-        {member.full_name || "Unnamed Team Member"}
-        {member.role ? ` — ${member.role}` : ""}
-      </option>
-    ))}
-  </select>
-</div>
-<div className="mt-4">
-  <label className="block text-sm font-medium text-gray-700">
-    Estimated Cost
-  </label>
-
-  <input
-    type="number"
-    min="0"
-    step="0.01"
-    value={workOrderEstimatedCost}
-    onChange={(e) => setWorkOrderEstimatedCost(e.target.value)}
-    placeholder="0.00"
-    className="mt-1 w-full rounded-lg border border-gray-300 p-3"
-  />
-</div>
-<div className="mt-4">
-  <label className="block text-sm font-medium text-gray-700">
-    Actual Cost
-  </label>
-
-  <input
-    type="number"
-    min="0"
-    step="0.01"
-    value={workOrderActualCost}
-    onChange={(e) => setWorkOrderActualCost(e.target.value)}
-    placeholder="0.00"
-    className="mt-1 w-full rounded-lg border border-gray-300 p-3"
-  />
-</div>
-<div className="mt-4">
-  <label className="block text-sm font-medium text-gray-700">
-    Completion Notes
-  </label>
-
-  <textarea
-    value={workOrderCompletionNotes}
-    onChange={(e) => setWorkOrderCompletionNotes(e.target.value)}
-    placeholder="Describe the work completed..."
-    rows={4}
-    className="mt-1 w-full rounded-lg border border-gray-300 p-3"
-  />
-</div>
-
-<button
-  type="button"
-  onClick={addWorkOrder}
-  className="mt-5 rounded-lg bg-emerald-600 px-5 py-3 text-white hover:bg-emerald-700"
->
-  Save Work Order
-</button>
-{editingWorkOrderId && (
-    <button
-      type="button"
-      onClick={deleteWorkOrder}
-      className="mt-5 ml-3 rounded-lg bg-red-600 px-5 py-3 text-white hover:bg-red-700"
-    >
-      Delete Work Order
-    </button>
-  )}
-
-
-    </div>
-  </div>
-)}
-
-    <div className="mt-6 space-y-4">
+    {/* Work Order List */}
+    <div className="p-8">
       {workOrders.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
-          <p className="text-gray-500">
-            No work orders yet.
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-gray-400 shadow-sm ring-1 ring-gray-200">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              className="h-6 w-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 5h6M9 3h6a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h1V4a1 1 0 0 1 1-1Z"
+              />
+            </svg>
+          </div>
+
+          <p className="mt-4 text-sm font-semibold text-gray-800">
+            No work orders yet
+          </p>
+
+          <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-gray-500">
+            Add a work order to begin tracking maintenance and service
+            activity for this property.
           </p>
         </div>
       ) : (
-        workOrders.map((workOrder) => (
-          <div
-            key={workOrder.id}
-            className="rounded-lg border border-gray-200 p-5"
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {workOrder.title}
-              </h3>
-              <Link
-  href={`/work-orders/${workOrder.id}`}
-  className="ml-3 rounded-lg border border-blue-300 px-3 py-1 text-sm text-blue-700 hover:bg-blue-50"
->
-  View Work Order
-</Link>
+        <div className="space-y-5">
+          {workOrders.map((workOrder) => {
+            const completed =
+              workOrder.status === "Completed";
 
-<button
-  type="button"
-  onClick={() => editWorkOrder(workOrder)}
-  className="ml-3 rounded-lg border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50"
->
-  Edit
-</button>
+            const cancelled =
+              workOrder.status === "Cancelled";
 
-              <select
-  value={workOrder.status}
-  onChange={(e) =>
-    updateWorkOrderStatus(workOrder.id, e.target.value)
-  }
-  className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700"
->
-  <option value="Open">Open</option>
-  <option value="In Progress">In Progress</option>
-  <option value="Completed">Completed</option>
-  <option value="Cancelled">Cancelled</option>
-</select>
-            </div>
+            return (
+              <div
+                key={workOrder.id}
+                className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:border-gray-300 hover:shadow-md"
+              >
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">
+                        Work Order
+                      </p>
 
-            {workOrder.description && (
-              <p className="mt-2 text-gray-600">
-                {workOrder.description}
-              </p>
-            )}
-{workOrder.completion_notes && (
-  <div className="mt-3 rounded-lg bg-gray-50 p-3">
-    <p className="text-sm font-medium text-gray-700">
-      Completion Notes
-    </p>
+                      <span
+                        className={
+                          "rounded-full px-2.5 py-1 text-xs font-semibold " +
+                          (completed
+                            ? "bg-gray-100 text-gray-600"
+                            : cancelled
+                              ? "bg-gray-100 text-gray-500"
+                              : "bg-blue-50 text-blue-700")
+                        }
+                      >
+                        {workOrder.status}
+                      </span>
+                    </div>
 
-    <p className="mt-1 text-sm text-gray-600">
-      {workOrder.completion_notes}
-    </p>
-  </div>
-)}
-            <div className="mt-3 flex gap-4 text-sm text-gray-500">
-            {workOrder.assigned_user && (
-  <span>
-    Assigned To: {workOrder.assigned_user.full_name || "Unnamed Team Member"}
-  </span>
-)}
-              <span>
-                Priority: {workOrder.priority}
-              </span>
-              {workOrder.estimated_cost !== null &&
-    workOrder.estimated_cost !== undefined && (
-      <span>
-        Estimated Cost: ${Number(workOrder.estimated_cost).toFixed(2)}
-      </span>
-    )}
-    {workOrder.actual_cost !== null &&
-  workOrder.actual_cost !== undefined && (
-    <span>
-      Actual Cost: ${Number(workOrder.actual_cost).toFixed(2)}
-    </span>
-  )}
-  {workOrder.estimated_cost !== null &&
-  workOrder.estimated_cost !== undefined &&
-  workOrder.actual_cost !== null &&
-  workOrder.actual_cost !== undefined && (
-    <span>
-      {Number(workOrder.actual_cost) <=
-      Number(workOrder.estimated_cost)
-        ? `$${(
-            Number(workOrder.estimated_cost) -
-            Number(workOrder.actual_cost)
-          ).toFixed(2)} Under Estimate`
-        : `$${(
-            Number(workOrder.actual_cost) -
-            Number(workOrder.estimated_cost)
-          ).toFixed(2)} Over Estimate`}
-    </span>
-  )}
+                    <h3 className="mt-2 text-xl font-semibold tracking-tight text-gray-900">
+                      {workOrder.title}
+                    </h3>
+                  </div>
 
-              {workOrder.due_date && (
-                <span>
-                  Due: {workOrder.due_date}
-                </span>
-              )}
-            </div>
-          </div>
-        ))
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/work-orders/${workOrder.id}`}
+                      className="rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                    >
+                      View Work Order
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={() => editWorkOrder(workOrder)}
+                      className="rounded-xl border border-gray-300 bg-white px-3.5 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </div>
+
+                {workOrder.description && (
+                  <p className="mt-5 text-sm leading-6 text-gray-600">
+                    {workOrder.description}
+                  </p>
+                )}
+
+                <div className="mt-5 grid gap-4 border-t border-gray-100 pt-5 sm:grid-cols-2 lg:grid-cols-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-gray-400">
+                      Assigned To
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-gray-900">
+                      {workOrder.assigned_user?.full_name ||
+                        "Unassigned"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-gray-400">
+                      Priority
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-gray-900">
+                      {workOrder.priority}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-gray-400">
+                      Due Date
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-gray-900">
+                      {workOrder.due_date || "Not scheduled"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-gray-400">
+                      Costs
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-gray-900">
+                      {workOrder.actual_cost !== null &&
+                      workOrder.actual_cost !== undefined
+                        ? `$${Number(workOrder.actual_cost).toFixed(2)} actual`
+                        : workOrder.estimated_cost !== null &&
+                            workOrder.estimated_cost !== undefined
+                          ? `$${Number(
+                              workOrder.estimated_cost
+                            ).toFixed(2)} estimated`
+                          : "No cost recorded"}
+                    </p>
+                  </div>
+                </div>
+
+                {workOrder.completion_notes && (
+                  <div className="mt-5 rounded-xl bg-gray-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-gray-400">
+                      Completion Notes
+                    </p>
+
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-gray-600">
+                      {workOrder.completion_notes}
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-5 flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <select
+                    value={workOrder.status}
+                    onChange={(e) =>
+                      updateWorkOrderStatus(
+                        workOrder.id,
+                        e.target.value
+                      )
+                    }
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 sm:w-auto"
+                  >
+                    <option value="Open">Open</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+
+                  <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+                    {workOrder.estimated_cost !== null &&
+                      workOrder.estimated_cost !== undefined && (
+                        <span>
+                          Estimated: $
+                          {Number(
+                            workOrder.estimated_cost
+                          ).toFixed(2)}
+                        </span>
+                      )}
+
+                    {workOrder.actual_cost !== null &&
+                      workOrder.actual_cost !== undefined && (
+                        <span>
+                          Actual: $
+                          {Number(
+                            workOrder.actual_cost
+                          ).toFixed(2)}
+                        </span>
+                      )}
+
+                    {workOrder.estimated_cost !== null &&
+                      workOrder.estimated_cost !== undefined &&
+                      workOrder.actual_cost !== null &&
+                      workOrder.actual_cost !== undefined && (
+                        <span className="font-semibold text-gray-600">
+                          {Number(workOrder.actual_cost) <=
+                          Number(workOrder.estimated_cost)
+                            ? `$${(
+                                Number(
+                                  workOrder.estimated_cost
+                                ) -
+                                Number(
+                                  workOrder.actual_cost
+                                )
+                              ).toFixed(2)} Under Estimate`
+                            : `$${(
+                                Number(
+                                  workOrder.actual_cost
+                                ) -
+                                Number(
+                                  workOrder.estimated_cost
+                                )
+                              ).toFixed(2)} Over Estimate`}
+                        </span>
+                      )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   </div>
 )}
+
 
       {activeTab === "Service History" && (
         <div className="rounded-xl bg-white p-8 shadow">
