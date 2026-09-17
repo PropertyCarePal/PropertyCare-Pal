@@ -333,29 +333,46 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
   return (
     <AppLayout>
       <div className="mx-auto max-w-7xl">
-      <header className="mb-10">
-  <div className="flex items-center gap-5">
-    <img
-      src="/brand/propertycare-pal-logo.png"
-      alt="PropertyCare Pal"
-      className="h-40 w-auto object-contain"
+      <header className="mb-10 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+  <div className="relative min-h-[230px] overflow-hidden">
+    <div
+      className="absolute inset-0 bg-cover bg-center"
+      style={{
+        backgroundImage: "url('/brand/coachella-valley-hero.jpg')",
+      }}
     />
 
-<div className="border-l border-gray-200 pl-5">
-      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#102A43]">
-       
-      </p>
+    <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/20" />
 
-      <h1 className="mt-1 text-4xl font-bold tracking-tight text-gray-900">
-       
-      </h1>
+    <div className="relative flex min-h-[230px] items-center px-8 py-8 md:px-12">
+    <div className="flex items-center gap-0">
+{/* House + wave logo */}
+<div className="shrink-0">
+  <img
+    src="/brand/WaveLogo.png"
+    alt="PropertyCarePal"
+    className="h-60 w-auto object-contain md:h-64"
+  />
+</div>
+{/* Brand text */}
+<div>
+  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#102A43]">
+    Property Management
+  </p>
 
-      <p className="mt-2 text-base text-gray-500">
-       
-      </p>
+  <h1 className="mt-1 text-4xl font-bold tracking-tight text-[#102A43] md:text-5xl">
+    PropertyCarePal
+  </h1>
+
+  <p className="mt-1 text-sm text-gray-500 md:text-base">
+    Property Management made simple.
+  </p>
+</div>
+
+</div>
     </div>
   </div>
-  </header>
+</header>
   <section className="grid gap-5 md:grid-cols-3">
   <div className="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
     <div className="flex items-start justify-between">
