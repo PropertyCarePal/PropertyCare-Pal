@@ -1925,184 +1925,295 @@ const { data: workOrderData, error: workOrderError } = await supabase
 </div>
 )}
 {activeTab === "Assets" && (
-  <div className="rounded-xl bg-white p-8 shadow">
-    <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-2xl font-semibold text-gray-900">
-          Assets
-        </h2>
+  <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <div className="border-b border-gray-200 px-8 py-7">
+      <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                className="h-5 w-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 3 4 7v10l8 4 8-4V7l-8-4Z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="m4 7 8 4 8-4M12 11v10"
+                />
+              </svg>
+            </div>
 
-        <p className="mt-2 text-gray-600">
-          Equipment and systems associated with this property.
-        </p>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">
+                Property Equipment
+              </p>
+
+              <h2 className="mt-1 text-2xl font-semibold tracking-tight text-gray-900">
+                Assets
+              </h2>
+            </div>
+          </div>
+
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-gray-600">
+            Equipment and systems associated with this property.
+          </p>
+        </div>
+
+        <button
+          onClick={() => setShowAssetForm(!showAssetForm)}
+          className="inline-flex items-center justify-center rounded-xl bg-[#102A43] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#163B5C]"
+        >
+          {showAssetForm ? "Cancel" : "Add Asset"}
+        </button>
       </div>
-
-      <button
-  onClick={() => setShowAssetForm(!showAssetForm)}
-  className="rounded-lg bg-emerald-600 px-5 py-3 text-white hover:bg-emerald-700"
->
-  {showAssetForm ? "Cancel" : "Add Asset"}
-</button>{showAssetForm && (
-  <div className="mt-6 rounded-xl border border-gray-200 p-6">
-    <h3 className="text-xl font-semibold text-gray-900">
-      Add New Asset
-    </h3>
-
-    <div className="mt-5 grid gap-4 md:grid-cols-2">
-
-
-<input
-  placeholder="Asset Name"
-  value={assetName}
-  onChange={(e) => setAssetName(e.target.value)}
-  className="rounded-lg border p-3"
-/>
-<input
-  placeholder="Asset Type"
-  value={assetType}
-  onChange={(e) => setAssetType(e.target.value)}
-  className="rounded-lg border p-3"
-/>
-<input
-  placeholder="Manufacturer"
-  value={assetManufacturer}
-  onChange={(e) => setAssetManufacturer(e.target.value)}
-  className="rounded-lg border p-3"
-/>
-
-<input
-  placeholder="Model"
-  value={assetModel}
-  onChange={(e) => setAssetModel(e.target.value)}
-  className="rounded-lg border p-3"
-/>
-
-<input
-  placeholder="Serial Number"
-  value={assetSerialNumber}
-  onChange={(e) => setAssetSerialNumber(e.target.value)}
-  className="rounded-lg border p-3"
-/>
-
-<input
-  type="date"
-  value={assetInstallDate}
-  onChange={(e) => setAssetInstallDate(e.target.value)}
-  className="rounded-lg border p-3"
-/>
-
-<textarea
-  placeholder="Notes"
-  value={assetNotes}
-  onChange={(e) => setAssetNotes(e.target.value)}
-  className="rounded-lg border p-3 md:col-span-2"
-  rows={4}
-/>
-    </div>
-    <button
-  onClick={addAsset}
-  className="mt-5 rounded-lg bg-emerald-600 px-5 py-3 text-white hover:bg-emerald-700"
->
-  Save Asset
-</button>
-  </div>
-)}
     </div>
 
-    <div className="mt-6 space-y-4">
-  {assets.length === 0 ? (
-    <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
-      <p className="text-gray-500">
-        No assets added yet.
-      </p>
-    </div>
-  ) : (
-    assets.map((asset) => (
-      <div
-        key={asset.id}
-        className="rounded-xl border border-gray-200 bg-gray-50 p-5"
-      >
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-
+    {showAssetForm && (
+      <div className="border-b border-gray-200 bg-gray-50/70 px-8 py-7">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <div>
-            <p className="text-xs font-medium uppercase text-gray-500">
-              Asset
-            </p>
-            <p className="mt-1 font-semibold text-gray-900">
-              {asset.name}
+            <h3 className="text-lg font-semibold tracking-tight text-gray-900">
+              Add New Asset
+            </h3>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Add equipment or systems associated with this property.
             </p>
           </div>
 
-          <div>
-            <p className="text-xs font-medium uppercase text-gray-500">
-              Type
-            </p>
-            <p className="mt-1 text-gray-900">
-              {asset.asset_type || "Not provided"}
-            </p>
+          <div className="mt-6 grid gap-5 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Asset Name
+              </label>
+
+              <input
+                placeholder="e.g. HVAC System"
+                value={assetName}
+                onChange={(e) => setAssetName(e.target.value)}
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Asset Type
+              </label>
+
+              <input
+                placeholder="e.g. HVAC, Pool, Appliance"
+                value={assetType}
+                onChange={(e) => setAssetType(e.target.value)}
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Manufacturer
+              </label>
+
+              <input
+                placeholder="Manufacturer name"
+                value={assetManufacturer}
+                onChange={(e) => setAssetManufacturer(e.target.value)}
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Model
+              </label>
+
+              <input
+                placeholder="Model number"
+                value={assetModel}
+                onChange={(e) => setAssetModel(e.target.value)}
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Serial Number
+              </label>
+
+              <input
+                placeholder="Serial number"
+                value={assetSerialNumber}
+                onChange={(e) => setAssetSerialNumber(e.target.value)}
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Install Date
+              </label>
+
+              <input
+                type="date"
+                value={assetInstallDate}
+                onChange={(e) => setAssetInstallDate(e.target.value)}
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Notes
+              </label>
+
+              <textarea
+                placeholder="Add any useful maintenance or equipment notes"
+                value={assetNotes}
+                onChange={(e) => setAssetNotes(e.target.value)}
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                rows={4}
+              />
+            </div>
           </div>
 
-          <div>
-            <p className="text-xs font-medium uppercase text-gray-500">
-              Manufacturer
-            </p>
-            <p className="mt-1 text-gray-900">
-              {asset.manufacturer || "Not provided"}
-            </p>
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={addAsset}
+              className="rounded-xl bg-[#102A43] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#163B5C]"
+            >
+              Save Asset
+            </button>
           </div>
-
-          <div>
-            <p className="text-xs font-medium uppercase text-gray-500">
-              Model
-            </p>
-            <p className="mt-1 text-gray-900">
-              {asset.model || "Not provided"}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs font-medium uppercase text-gray-500">
-              Serial Number
-            </p>
-            <p className="mt-1 text-gray-900">
-              {asset.serial_number || "Not provided"}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs font-medium uppercase text-gray-500">
-              Install Date
-            </p>
-            <p className="mt-1 text-gray-900">
-              {asset.install_date || "Not provided"}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs font-medium uppercase text-gray-500">
-              Status
-            </p>
-            <p className="mt-1 text-gray-900">
-              {asset.status || "Not provided"}
-            </p>
-          </div>
-
-          <div className="md:col-span-2 lg:col-span-2">
-            <p className="text-xs font-medium uppercase text-gray-500">
-              Notes
-            </p>
-            <p className="mt-1 text-gray-900">
-              {asset.notes || "No notes"}
-            </p>
-          </div>
-
         </div>
       </div>
-    ))
-  )}
-</div>
+    )}
+
+    <div className="p-8">
+      {assets.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-gray-400 shadow-sm ring-1 ring-gray-200">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              className="h-6 w-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 3 4 7v10l8 4 8-4V7l-8-4Z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="m4 7 8 4 8-4M12 11v10"
+              />
+            </svg>
+          </div>
+
+          <p className="mt-4 text-sm font-semibold text-gray-800">
+            No assets added yet
+          </p>
+
+          <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-gray-500">
+            Add HVAC systems, pool equipment, appliances, or other property
+            assets to keep important equipment information in one place.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-5">
+          {assets.map((asset) => (
+            <div
+              key={asset.id}
+              className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:border-gray-300 hover:shadow-md"
+            >
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">
+                    Asset
+                  </p>
+
+                  <h3 className="mt-1 text-xl font-semibold tracking-tight text-gray-900">
+                    {asset.name}
+                  </h3>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    {asset.asset_type || "Asset type not provided"}
+                  </p>
+                </div>
+
+                <div className="inline-flex w-fit items-center rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-600">
+                  {asset.status || "Status not provided"}
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.1em] text-gray-400">
+                    Manufacturer
+                  </p>
+
+                  <p className="mt-1 text-sm font-medium text-gray-900">
+                    {asset.manufacturer || "Not provided"}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.1em] text-gray-400">
+                    Model
+                  </p>
+
+                  <p className="mt-1 text-sm font-medium text-gray-900">
+                    {asset.model || "Not provided"}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.1em] text-gray-400">
+                    Serial Number
+                  </p>
+
+                  <p className="mt-1 text-sm font-medium text-gray-900">
+                    {asset.serial_number || "Not provided"}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.1em] text-gray-400">
+                    Install Date
+                  </p>
+
+                  <p className="mt-1 text-sm font-medium text-gray-900">
+                    {asset.install_date || "Not provided"}
+                  </p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.1em] text-gray-400">
+                    Notes
+                  </p>
+
+                  <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-gray-700">
+                    {asset.notes || "No notes"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   </div>
 )}
+
 
 {activeTab === "Work Orders" && (
   <div className="rounded-xl bg-white p-8 shadow">
