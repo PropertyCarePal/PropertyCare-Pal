@@ -12,6 +12,7 @@ type Property = {
   address: string | null;
   city: string | null;
   state: string | null;
+  zip_code: string | null;
   status: string | null;
   property_type: string | null;
 };
@@ -24,6 +25,7 @@ export default function PropertiesPage() {
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
+  const [zipCode, setZipCode] = useState("");
   const [propertyType, setPropertyType] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -55,6 +57,7 @@ export default function PropertiesPage() {
         address,
         city,
         state,
+        zip_code: zipCode,
         property_type: propertyType,
         status: "Active",
       });
@@ -80,6 +83,7 @@ ${error.code}`
     setAddress("");
     setCity("");
     setState("");
+    setZipCode("");
     setPropertyType("");
     setShowForm(false);
     setSaving(false);
@@ -159,66 +163,139 @@ ${error.code}`
         </header>
   
         {showForm && (
-          <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold tracking-tight text-gray-900">
-                Add New Property
-              </h2>
-  
-              <p className="mt-1 text-sm text-gray-500">
-                Add a property to your organization's portfolio.
-              </p>
-            </div>
-  
-            <div className="grid gap-4 md:grid-cols-2">
-              <input
-                placeholder="Property Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
-              />
-  
-              <input
-                placeholder="Address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
-              />
-  
-              <input
-                placeholder="City"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
-              />
-  
-              <input
-                placeholder="State"
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-                className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
-              />
-  
-              <input
-                placeholder="Property Type"
-                value={propertyType}
-                onChange={(e) => setPropertyType(e.target.value)}
-                className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
-              />
-            </div>
-  
-            <div className="mt-6 flex justify-end">
-              <button
-                type="button"
-                onClick={addProperty}
-                disabled={saving}
-                className="rounded-xl bg-[#102A43] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {saving ? "Saving..." : "Save Property"}
-              </button>
-            </div>
-          </div>
-        )}
+  <div className="mb-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <div className="border-b border-gray-100 bg-gray-50/70 px-6 py-5">
+      <div className="flex items-start gap-4">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            className="h-6 w-6"
+          >
+            <path d="M3 10.5 12 3l9 7.5" />
+            <path d="M5 9.5V21h14V9.5" />
+            <path d="M9 21v-6h6v6" />
+          </svg>
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight text-gray-900">
+            Add New Property
+          </h2>
+
+          <p className="mt-1 text-sm text-gray-500">
+            Add a property to your organization's portfolio.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div className="p-6">
+      <div className="grid gap-5 md:grid-cols-2">
+        <div>
+          <label className="mb-2 block text-sm font-medium text-gray-700">
+            Property Name
+          </label>
+
+          <input
+            placeholder="Enter property name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium text-gray-700">
+            Address
+          </label>
+
+          <input
+            placeholder="Enter street address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium text-gray-700">
+            City
+          </label>
+
+          <input
+            placeholder="Enter city"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium text-gray-700">
+            State
+          </label>
+
+          <input
+            placeholder="Enter state"
+            value={state}
+            onChange={(e) => setState(e.target.value)}
+            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
+        <div>
+  <label className="mb-2 block text-sm font-medium text-gray-700">
+    ZIP Code
+  </label>
+
+  <input
+    placeholder="Enter ZIP code"
+    value={zipCode}
+    onChange={(e) => setZipCode(e.target.value)}
+    inputMode="numeric"
+    maxLength={10}
+    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+  />
+</div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium text-gray-700">
+            Property Type
+          </label>
+
+          <input
+            placeholder="e.g. Single Family, Condo, HOA"
+            value={propertyType}
+            onChange={(e) => setPropertyType(e.target.value)}
+            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
+      </div>
+
+      <div className="mt-6 flex items-center justify-end gap-3 border-t border-gray-100 pt-5">
+        <button
+          type="button"
+          onClick={() => setShowForm(false)}
+          className="rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          onClick={addProperty}
+          disabled={saving}
+          className="rounded-xl bg-[#102A43] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {saving ? "Saving..." : "Save Property"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
   
         {properties.length === 0 ? (
           <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
@@ -294,6 +371,7 @@ ${error.code}`
         {property.city || ""}
         {property.city && property.state ? ", " : ""}
         {property.state || ""}
+        {property.zip_code ? ` ${property.zip_code}` : ""}
       </p>
     </div>
 
