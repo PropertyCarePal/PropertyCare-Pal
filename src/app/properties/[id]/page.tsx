@@ -2855,23 +2855,83 @@ const { data: workOrderData, error: workOrderError } = await supabase
 )}
 
 
-      {activeTab === "Service History" && (
-        <div className="rounded-xl bg-white p-8 shadow">
-          <h2 className="text-2xl font-semibold text-gray-900">
-            Service History
-          </h2>
+{activeTab === "Service History" && (
+  <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <div className="border-b border-gray-200 px-8 py-7">
+      <div className="flex items-center gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            className="h-5 w-5"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M8 3h8l3 3v15H5V3h3Z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M8 3v5h8V3M8 12h8M8 16h5"
+            />
+          </svg>
+        </div>
 
-          <p className="mt-2 text-gray-600">
-            Property maintenance history will appear here.
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">
+            Property Records
           </p>
 
-          <div className="mt-6 rounded-lg border border-dashed border-gray-300 p-8 text-center">
-            <p className="text-gray-500">
-              No service history yet.
-            </p>
-          </div>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-gray-900">
+            Service History
+          </h2>
         </div>
-      )}
+      </div>
+
+      <p className="mt-4 max-w-2xl text-sm leading-6 text-gray-600">
+        Review maintenance and service activity associated with this
+        property.
+      </p>
+    </div>
+
+    <div className="p-8">
+      <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-gray-400 shadow-sm ring-1 ring-gray-200">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            className="h-6 w-6"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M8 3h8l3 3v15H5V3h3Z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M8 3v5h8V3M8 12h8M8 16h5"
+            />
+          </svg>
+        </div>
+
+        <p className="mt-4 text-sm font-semibold text-gray-800">
+          No service history yet
+        </p>
+
+        <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-gray-500">
+          Completed maintenance and service activity will appear here as
+          work is performed on this property.
+        </p>
+      </div>
+    </div>
+  </div>
+)}
 
 </div>
   </AppLayout>
