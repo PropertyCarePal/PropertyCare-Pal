@@ -60,7 +60,7 @@ export default function PropertyDetailsPage() {
 
   const [property, setProperty] = useState<Property | null>(null);
   const [loadingProperty, setLoadingProperty] = useState(true);
- 
+
   const [editingProperty, setEditingProperty] = useState(false);
 const [propertyName, setPropertyName] = useState("");
 const [propertyAddress, setPropertyAddress] = useState("");
@@ -124,68 +124,68 @@ const [loadingContacts, setLoadingContacts] = useState(true);
     teal: "bg-teal-600 hover:bg-teal-700",
     rose: "bg-rose-600 hover:bg-rose-700",
   };
-  
+
   function getTeamMemberColor(userId: string | null) {
     if (!userId) {
       return "bg-emerald-600 hover:bg-emerald-700";
     }
-  
+
     const member = teamMembers.find((member) => member.id === userId);
-  
+
     if (!member?.calendar_color) {
       return "bg-emerald-600 hover:bg-emerald-700";
     }
-  
+
     return (
       teamMemberColors[member.calendar_color] ??
       "bg-emerald-600 hover:bg-emerald-700"
     );
   }
-  
-    
+
+
   function getCalendarDays(date: Date) {
     const year = date.getFullYear();
     const month = date.getMonth();
-  
+
     const firstDay = new Date(year, month, 1);
     const startDay = firstDay.getDay();
-  
+
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-  
+
     const days: (Date | null)[] = [];
-  
+
     for (let i = 0; i < startDay; i++) {
       days.push(null);
     }
-  
+
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(new Date(year, month, day));
     }
-  
+
     while (days.length % 7 !== 0) {
       days.push(null);
     }
-  
+
     return days;
   }
-  
+
   function formatCalendarMonth(date: Date) {
     return date.toLocaleDateString("en-US", {
       month: "long",
       year: "numeric",
     });
   }
-  
+
   function formatCalendarDate(date: Date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
-  
+
     return `${year}-${month}-${day}`;
-  } 
+  }
   const [showWorkOrderForm, setShowWorkOrderForm] = useState(false);
 const [workOrderTitle, setWorkOrderTitle] = useState("");
-const [workOrderPriority, setWorkOrderPriority] = useState("Medium"); 
+const [workOrderPriority, setWorkOrderPriority] = useState("Medium");
 const [workOrderDescription, setWorkOrderDescription] = useState("");
 const [workOrderDueDate, setWorkOrderDueDate] = useState("");
 const [workOrderStatus, setWorkOrderStatus] = useState("Open");
@@ -199,20 +199,20 @@ const [editingWorkOrderId, setEditingWorkOrderId] = useState<string | null>(null
   async function addAsset() {
     if (!user || !params.id) return;
     console.log("WORK ORDER STATUS:", workOrderStatus);
-  
+
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("organization_id")
       .eq("id", user.id)
       .single();
-  
+
     if (profileError) {
       console.error("PROFILE ERROR:", profileError);
       alert("Unable to find your organization.");
       return;
     }
 
-    
+
     console.log("ASSET INSERT DATA:", {
         organization_id: profile.organization_id,
         property_id: params.id,
@@ -233,13 +233,13 @@ const [editingWorkOrderId, setEditingWorkOrderId] = useState<string | null>(null
         notes: assetNotes,
         status: "Active",
       });
-  
+
       if (error) {
         console.error("ASSET INSERT ERROR MESSAGE:", error.message);
         console.error("ASSET INSERT ERROR DETAILS:", error.details);
         console.error("ASSET INSERT ERROR HINT:", error.hint);
         console.error("ASSET INSERT ERROR CODE:", error.code);
-      
+
         alert(
           `ASSET SAVE FAILED\n\n` +
           `Message: ${error.message}\n` +
@@ -247,12 +247,12 @@ const [editingWorkOrderId, setEditingWorkOrderId] = useState<string | null>(null
           `Hint: ${error.hint}\n` +
           `Code: ${error.code}`
         );
-      
+
         return;
       }
-      
+
       console.log("ASSET INSERT SUCCESS");
-  
+
     setAssetName("");
     setAssetType("");
     setAssetManufacturer("");
@@ -261,12 +261,12 @@ const [editingWorkOrderId, setEditingWorkOrderId] = useState<string | null>(null
     setAssetInstallDate("");
     setAssetNotes("");
     setShowAssetForm(false);
-  
+
     alert("Asset saved successfully!");
 }
 function editWorkOrder(workOrder: any) {
     setEditingWorkOrderId(workOrder.id);
-  
+
     setWorkOrderTitle(workOrder.title || "");
     setWorkOrderDescription(workOrder.description || "");
     setWorkOrderPriority(workOrder.priority || "Medium");
@@ -274,61 +274,61 @@ function editWorkOrder(workOrder: any) {
     setWorkOrderStatus(workOrder.status || "Open");
     setWorkOrderAssignedTo(workOrder.assigned_to || "");
     setWorkOrderAssignedUserId(workOrder.assigned_user_id || "");
-  
+
     setWorkOrderEstimatedCost(
       workOrder.estimated_cost !== null &&
         workOrder.estimated_cost !== undefined
         ? String(workOrder.estimated_cost)
         : ""
     );
-  
+
     setWorkOrderActualCost(
       workOrder.actual_cost !== null &&
         workOrder.actual_cost !== undefined
         ? String(workOrder.actual_cost)
         : ""
     );
-  
+
     setWorkOrderCompletionNotes(workOrder.completion_notes || "");
-  
+
     setShowWorkOrderForm(true);
   }
   async function deleteWorkOrder() {
     if (!editingWorkOrderId) return;
-  
+
     const confirmed = window.confirm(
       "Are you sure you want to delete this work order? This cannot be undone."
     );
-  
+
     if (!confirmed) return;
-  
+
     const { error } = await supabase
       .from("work_orders")
       .delete()
       .eq("id", editingWorkOrderId);
-  
+
     if (error) {
       console.error("WORK ORDER DELETE ERROR:", error);
       alert(`Unable to delete work order.\n\n${error.message}`);
       return;
     }
-  
+
     setWorkOrders((current) =>
       current.filter(
         (workOrder) => workOrder.id !== editingWorkOrderId
       )
     );
-  
+
     setEditingWorkOrderId(null);
     setShowWorkOrderForm(false);
-  
+
     alert("Work order deleted successfully.");
   }
   async function saveProperty() {
     if (!user || !params.id) return;
-  
+
     setSavingProperty(true);
-  
+
     const { data, error } = await supabase
       .from("properties")
       .update({
@@ -346,14 +346,14 @@ function editWorkOrder(workOrder: any) {
       .eq("id", params.id)
       .select("*")
       .single();
-  
+
     if (error) {
       console.error("PROPERTY UPDATE ERROR:", error);
       alert("Unable to save property information.");
       setSavingProperty(false);
       return;
     }
-  
+
     setProperty(data);
     setEditingProperty(false);
     setSavingProperty(false);
@@ -639,7 +639,7 @@ async function deletePropertyContact(contactId: string) {
   alert("Property contact deleted successfully.");
 }
 async function addWorkOrder() {
-   
+
   if (!user || !params.id) return;
 
   const { data: profile, error: profileError } = await supabase
@@ -653,7 +653,7 @@ async function addWorkOrder() {
     alert("Unable to find your organization.");
     return;
   }
-  
+
   const workOrderData = {
     organization_id: profile.organization_id,
     property_id: String(params.id),
@@ -717,7 +717,7 @@ console.log("SAVED COMPLETED AT:", data?.completed_at);
         workOrder.id === editingWorkOrderId ? data : workOrder
       );
     }
-  
+
     return [data, ...current];
   });
 
@@ -725,7 +725,7 @@ console.log("SAVED COMPLETED AT:", data?.completed_at);
   setWorkOrderDescription("");
   setWorkOrderPriority("Medium");
   setWorkOrderDueDate("");
-  setWorkOrderStatus("Open"); 
+  setWorkOrderStatus("Open");
   setEditingWorkOrderId(null);
   setShowWorkOrderForm(false);
 
@@ -740,44 +740,44 @@ async function updateWorkOrderStatus(
   .update({ status: newStatus })
   .eq("id", workOrderId)
   .select();
-  
+
     if (error) {
       console.error("WORK ORDER STATUS UPDATE ERROR:", error);
       alert(`Unable to update work order.\n\n${error.message}`);
       return;
     }
-  
+
     if (!data || data.length === 0) {
         alert("Work order was not updated.");
         return;
       }
-      
+
       setWorkOrders((current) =>
         current.map((workOrder) =>
           workOrder.id === workOrderId ? data[0] : workOrder
         )
       );
   }
-  
-    
+
+
   async function savePropertyAccess() {
     if (!user || !property) return;
-  
+
     setSavingAccess(true);
-  
+
     try {
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("organization_id")
         .eq("id", user.id)
         .single();
-  
+
       if (profileError || !profile) {
         console.error("PROFILE ERROR:", profileError);
         alert("Unable to determine your organization.");
         return;
       }
-  
+
       const accessPayload = {
         organization_id: profile.organization_id,
         property_id: property.id,
@@ -788,9 +788,9 @@ async function updateWorkOrderStatus(
         private_notes: privateNotes.trim() || null,
         updated_at: new Date().toISOString(),
       };
-  
+
       let result;
-  
+
       if (propertyAccess) {
         result = await supabase
           .from("property_access")
@@ -805,16 +805,16 @@ async function updateWorkOrderStatus(
           .select()
           .single();
       }
-  
+
       if (result.error) {
         console.error("PROPERTY ACCESS SAVE ERROR:", result.error);
         alert(`Unable to save private access information.\n\n${result.error.message}`);
         return;
       }
-  
+
       setPropertyAccess(result.data);
       setEditingAccess(false);
-  
+
       alert("Private access information saved successfully.");
     } finally {
       setSavingAccess(false);
@@ -843,7 +843,7 @@ useEffect(() => {
       .select("id, full_name, role, calendar_color")
       .eq("organization_id", profile.organization_id)
       .order("full_name", { ascending: true });
-    
+
     if (teamMemberError) {
       console.error("TEAM MEMBERS LOAD ERROR:", teamMemberError);
     } else {
@@ -868,7 +868,7 @@ useEffect(() => {
       .eq("property_id", String(params.id))
       .eq("organization_id", profile.organization_id)
       .order("created_at", { ascending: false });
-    
+
       if (assetError) {
         console.error("ASSET LOAD ERROR:", assetError);
         alert(`ASSET LOAD ERROR: ${assetError.message}`);
@@ -887,7 +887,7 @@ useEffect(() => {
       setPropertyStatus(data.status || "");
       setOwnerName(data.owner_name || "");
       setOwnerEmail(data.owner_email || "");
-      setOwnerPhone(data.owner_phone || ""); 
+      setOwnerPhone(data.owner_phone || "");
 
       const { data: contactData, error: contactError } = await supabase
       .from("property_contacts")
@@ -913,14 +913,15 @@ useEffect(() => {
       .eq("property_id", String(params.id))
       .eq("organization_id", profile.organization_id)
       .order("full_name", { ascending: true });
-    
-    if (contactError) {
-      console.error("PROPERTY CONTACTS LOAD ERROR:", contactError);
-      setPropertyContacts([]);
-    } else {
-      console.log("PROPERTY CONTACTS LOADED:", contactData);
-      setPropertyContacts(contactData || []);
-    }
+
+      if (contactError) {
+        console.error("PROPERTY CONTACTS LOAD ERROR:", contactError);
+        setPropertyContacts([]);
+      } else {
+        console.log("PROPERTY CONTACTS LOADED:", contactData);
+        setPropertyContacts(contactData || []);
+      }
+      setLoadingContacts(false);
 const { data: accessData, error: accessError } = await supabase
   .from("property_access")
   .select("*")
@@ -948,13 +949,13 @@ const { data: workOrderData, error: workOrderError } = await supabase
       .eq("property_id", String(params.id))
       .eq("organization_id", profile.organization_id)
       .order("created_at", { ascending: false });
-    
+
     if (workOrderError) {
       console.error("WORK ORDER LOAD ERROR:", workOrderError);
     } else {
       console.log("WORK ORDERS LOADED:", workOrderData);
       setWorkOrders(workOrderData || []);
-    } 
+    }
       setLoadingProperty(false);
     }
 
@@ -983,320 +984,466 @@ const { data: workOrderData, error: workOrderError } = await supabase
     <AppLayout>
       <div className="p-8">
 
-      <header className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900">
-          {property.name}
-        </h1>
+      <header className="mb-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+  <div className="relative overflow-hidden">
+    <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-white to-teal-50" />
 
-        <p className="mt-2 text-gray-600">
-          {property.address}
-          {property.city && ", " + property.city}
-          {property.state && ", " + property.state}
-        </p>
-      </header>
+    <div className="relative flex items-center justify-between gap-6 px-6 py-7 md:px-8">
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#102A43] text-white shadow-sm">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            className="h-7 w-7"
+          >
+            <path d="M3 10.5 12 3l9 7.5" />
+            <path d="M5 9.5V21h14V9.5" />
+            <path d="M9 21v-6h6v6" />
+          </svg>
+        </div>
 
-      <div className="mb-6 border-b border-gray-200">
-        <nav className="flex flex-wrap gap-6">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">
+            Property
+          </p>
 
-          {(
-            [
-              "Overview",
-              "Assets",
-              "Work Orders",
-              "Service History",
-            ] as Tab[]
-          ).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={
-                "pb-3 text-sm font-medium transition " +
-                (activeTab === tab
-                  ? "border-b-2 border-emerald-600 text-emerald-700"
-                  : "text-gray-500 hover:text-gray-900")
-              }
-            >
-              {tab}
-            </button>
-          ))}
+          <h1 className="mt-1 truncate text-3xl font-bold tracking-tight text-[#102A43] md:text-4xl">
+            {property.name}
+          </h1>
 
-        </nav>
+          <p className="mt-2 text-sm text-gray-500">
+            {property.address || "No address provided"}
+            {property.city && `, ${property.city}`}
+            {property.state && `, ${property.state}`}
+            {property.zip_code && ` ${property.zip_code}`}
+          </p>
+        </div>
       </div>
+
+      <div className="shrink-0">
+        <span
+          className={`inline-flex rounded-full px-3 py-1.5 text-xs font-semibold ${
+            property.status?.toLowerCase() === "active"
+              ? "bg-green-50 text-green-700"
+              : "bg-gray-100 text-gray-600"
+          }`}
+        >
+          {property.status || "Active"}
+        </span>
+      </div>
+    </div>
+  </div>
+</header>
+<div className="mb-6 rounded-2xl border border-gray-200 bg-white p-2 shadow-sm">
+  <nav className="flex flex-wrap gap-1">
+    {(
+      [
+        "Overview",
+        "Assets",
+        "Work Orders",
+        "Service History",
+      ] as Tab[]
+    ).map((tab) => (
+      <button
+        key={tab}
+        type="button"
+        onClick={() => setActiveTab(tab)}
+        className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
+          activeTab === tab
+            ? "bg-[#102A43] text-white shadow-sm"
+            : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+        }`}
+      >
+        {tab}
+      </button>
+    ))}
+  </nav>
+</div>
 
       {activeTab === "Overview" && (
         <div className="space-y-6">
 
-          <div className="grid gap-6 md:grid-cols-3">
+<div className="grid gap-5 md:grid-cols-3">
+  <div className="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#102A43]">
+          Property Status
+        </p>
 
-            <div className="rounded-xl bg-white p-6 shadow">
-              <p className="text-sm text-gray-500">
-                Property Status
-              </p>
+        <p className="mt-4 text-2xl font-bold tracking-tight text-gray-900">
+          {property.status || "Not Set"}
+        </p>
 
-              <p className="mt-2 text-2xl font-bold text-gray-900">
-                {property.status || "Not Set"}
-              </p>
-            </div>
+        <p className="mt-2 text-sm text-gray-500">
+          Current property status
+        </p>
+      </div>
 
-            <div className="rounded-xl bg-white p-6 shadow">
-              <p className="text-sm text-gray-500">
-                Property Type
-              </p>
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-700">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          className="h-5 w-5"
+        >
+          <path d="m5 12 4 4L19 6" />
+        </svg>
+      </div>
+    </div>
+  </div>
 
-              <p className="mt-2 text-2xl font-bold text-gray-900">
-                {property.property_type || "Not Set"}
-              </p>
-            </div>
+  <div className="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+    <div className="flex items-start justify-between gap-4">
+      <div className="min-w-0">
+        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#102A43]">
+          Property Type
+        </p>
 
-            <div className="rounded-xl bg-white p-6 shadow">
-              <p className="text-sm text-gray-500">
-                Property ID
-              </p>
+        <p className="mt-4 truncate text-2xl font-bold tracking-tight text-gray-900">
+          {property.property_type || "Not Set"}
+        </p>
 
-              <p className="mt-2 break-all font-mono text-sm text-gray-700">
-                {property.id}
-              </p>
-            </div>
+        <p className="mt-2 text-sm text-gray-500">
+          Property classification
+        </p>
+      </div>
 
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          className="h-5 w-5"
+        >
+          <path d="M3 10.5 12 3l9 7.5" />
+          <path d="M5 9.5V21h14V9.5" />
+          <path d="M9 21v-6h6v6" />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div className="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+    <div className="flex items-start justify-between gap-4">
+      <div className="min-w-0">
+        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#102A43]">
+          Property ID
+        </p>
+
+        <p className="mt-4 break-all font-mono text-sm font-semibold text-gray-900">
+          {property.id}
+        </p>
+
+        <p className="mt-2 text-sm text-gray-500">
+          Unique property identifier
+        </p>
+      </div>
+
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          className="h-5 w-5"
+        >
+          <rect x="4" y="4" width="16" height="16" rx="2" />
+          <path d="M8 8h8M8 12h8M8 16h5" />
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+<div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+  <div className="border-b border-gray-100 px-6 py-5">
+    <div className="flex items-center justify-between gap-4">
+      <div>
+        <h2 className="text-xl font-semibold tracking-tight text-gray-900">
+          Property Information
+        </h2>
+
+        <p className="mt-1 text-sm text-gray-500">
+          Property details and ownership information.
+        </p>
+      </div>
+
+      {!editingProperty && (
+        <button
+          type="button"
+          onClick={() => setEditingProperty(true)}
+          className="rounded-xl bg-[#102A43] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-md"
+        >
+          Edit Property
+        </button>
+      )}
+    </div>
+  </div>
+
+  {editingProperty ? (
+    <div className="p-6">
+      <div>
+        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#102A43]">
+          Property Details
+        </p>
+
+        <div className="mt-4 grid gap-5 md:grid-cols-2">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Property Name
+            </label>
+
+            <input
+              type="text"
+              value={propertyName}
+              onChange={(e) => setPropertyName(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+            />
           </div>
 
-          <div className="rounded-xl bg-white p-6 shadow">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Address
+            </label>
 
-          <div className="flex items-center justify-between">
-  <h2 className="text-xl font-semibold text-gray-900">
-    Property Information
-  </h2>
+            <input
+              type="text"
+              value={propertyAddress}
+              onChange={(e) => setPropertyAddress(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
 
-  <button
-    onClick={() => setEditingProperty(true)}
-    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-  >
-    Edit Property
-  </button>
-</div> 
-{editingProperty ? (
-  <div className="mt-6 space-y-6">
-    <div className="grid gap-6 md:grid-cols-2">
-      <div>
-        <label className="text-sm font-medium text-gray-700">
-          Property Name
-        </label>
-        <input
-          type="text"
-          value={propertyName}
-          onChange={(e) => setPropertyName(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-        />
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              City
+            </label>
+
+            <input
+              type="text"
+              value={propertyCity}
+              onChange={(e) => setPropertyCity(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              State
+            </label>
+
+            <input
+              type="text"
+              value={propertyState}
+              onChange={(e) => setPropertyState(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              ZIP Code
+            </label>
+
+            <input
+              type="text"
+              value={propertyZip}
+              onChange={(e) => setPropertyZip(e.target.value)}
+              inputMode="numeric"
+              maxLength={10}
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Property Type
+            </label>
+
+            <input
+              type="text"
+              value={propertyType}
+              onChange={(e) => setPropertyType(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Status
+            </label>
+
+            <input
+              type="text"
+              value={propertyStatus}
+              onChange={(e) => setPropertyStatus(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+        </div>
       </div>
 
-      <div>
-        <label className="text-sm font-medium text-gray-700">
-          Address
-        </label>
-        <input
-          type="text"
-          value={propertyAddress}
-          onChange={(e) => setPropertyAddress(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-        />
+      <div className="mt-8 border-t border-gray-100 pt-6">
+        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#102A43]">
+          Property Owner
+        </p>
+
+        <div className="mt-4 grid gap-5 md:grid-cols-2">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Owner Name
+            </label>
+
+            <input
+              type="text"
+              value={ownerName}
+              onChange={(e) => setOwnerName(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Owner Email
+            </label>
+
+            <input
+              type="email"
+              value={ownerEmail}
+              onChange={(e) => setOwnerEmail(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Owner Phone
+            </label>
+
+            <input
+              type="tel"
+              value={ownerPhone}
+              onChange={(e) => setOwnerPhone(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+        </div>
       </div>
 
-      <div>
-        <label className="text-sm font-medium text-gray-700">
-          City
-        </label>
-        <input
-          type="text"
-          value={propertyCity}
-          onChange={(e) => setPropertyCity(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-        />
-      </div>
+      <div className="mt-8 flex items-center justify-end gap-3 border-t border-gray-100 pt-5">
+        <button
+          type="button"
+          onClick={() => setEditingProperty(false)}
+          disabled={savingProperty}
+          className="rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Cancel
+        </button>
 
-      <div>
-        <label className="text-sm font-medium text-gray-700">
-          State
-        </label>
-        <input
-          type="text"
-          value={propertyState}
-          onChange={(e) => setPropertyState(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-        />
-      </div>
-
-      <div>
-        <label className="text-sm font-medium text-gray-700">
-          ZIP Code
-        </label>
-        <input
-          type="text"
-          value={propertyZip}
-          onChange={(e) => setPropertyZip(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-        />
-      </div>
-
-      <div>
-        <label className="text-sm font-medium text-gray-700">
-          Property Type
-        </label>
-        <input
-          type="text"
-          value={propertyType}
-          onChange={(e) => setPropertyType(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-        />
-      </div>
-
-      <div>
-        <label className="text-sm font-medium text-gray-700">
-          Status
-        </label>
-        <input
-          type="text"
-          value={propertyStatus}
-          onChange={(e) => setPropertyStatus(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-        />
-      </div>
-
-      <div>
-        <label className="text-sm font-medium text-gray-700">
-          Owner Name
-        </label>
-        <input
-          type="text"
-          value={ownerName}
-          onChange={(e) => setOwnerName(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-        />
-      </div>
-
-      <div>
-        <label className="text-sm font-medium text-gray-700">
-          Owner Email
-        </label>
-        <input
-          type="email"
-          value={ownerEmail}
-          onChange={(e) => setOwnerEmail(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-        />
-      </div>
-
-      <div>
-        <label className="text-sm font-medium text-gray-700">
-          Owner Phone
-        </label>
-        <input
-          type="tel"
-          value={ownerPhone}
-          onChange={(e) => setOwnerPhone(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-        />
+        <button
+          type="button"
+          onClick={saveProperty}
+          disabled={savingProperty}
+          className="rounded-xl bg-[#102A43] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {savingProperty ? "Saving..." : "Save Property"}
+        </button>
       </div>
     </div>
+  ) : (
+    <div className="p-6">
+      <div className="grid gap-x-8 gap-y-6 md:grid-cols-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
+            Address
+          </p>
 
-    <div className="flex gap-3">
-      <button
-        onClick={saveProperty}
-        disabled={savingProperty}
-        className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-      >
-        {savingProperty ? "Saving..." : "Save Property"}
-      </button>
+          <p className="mt-2 font-medium text-gray-900">
+            {property.address || "Not provided"}
+          </p>
+        </div>
 
-      <button
-        onClick={() => setEditingProperty(false)}
-        disabled={savingProperty}
-        className="rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 hover:bg-gray-50"
-      >
-        Cancel
-      </button>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
+            City
+          </p>
+
+          <p className="mt-2 font-medium text-gray-900">
+            {property.city || "Not provided"}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
+            State
+          </p>
+
+          <p className="mt-2 font-medium text-gray-900">
+            {property.state || "Not provided"}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
+            ZIP Code
+          </p>
+
+          <p className="mt-2 font-medium text-gray-900">
+            {property.zip_code || "Not provided"}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
+            Property Type
+          </p>
+
+          <p className="mt-2 font-medium text-gray-900">
+            {property.property_type || "Not provided"}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
+            Status
+          </p>
+
+          <p className="mt-2 font-medium text-gray-900">
+            {property.status || "Not provided"}
+          </p>
+        </div>
+      </div>
     </div>
-  </div>
-) : (
-  <div className="mt-6 grid gap-6 md:grid-cols-2">
-    <div>
-      <p className="text-sm text-gray-500">
-        Address
-      </p>
-      <p className="mt-1 font-medium text-gray-900">
-        {property.address || "Not provided"}
-      </p>
-    </div>
+  )}
+</div>
 
-    <div>
-      <p className="text-sm text-gray-500">
-        City
-      </p>
-      <p className="mt-1 font-medium text-gray-900">
-        {property.city || "Not provided"}
-      </p>
-    </div>
-
-    <div>
-      <p className="text-sm text-gray-500">
-        State
-      </p>
-      <p className="mt-1 font-medium text-gray-900">
-        {property.state || "Not provided"}
-      </p>
-    </div>
-
-    <div>
-      <p className="text-sm text-gray-500">
-        ZIP Code
-      </p>
-      <p className="mt-1 font-medium text-gray-900">
-      {property.zip_code || "Not provided"}
-      </p>
-    </div>
-
-    <div>
-      <p className="text-sm text-gray-500">
-        Property Type
-      </p>
-      <p className="mt-1 font-medium text-gray-900">
-        {property.property_type || "Not provided"}
-      </p>
-    </div>
-
-    <div>
-      <p className="text-sm text-gray-500">
-        Status
-      </p>
-      <p className="mt-1 font-medium text-gray-900">
-        {property.status || "Not provided"}
-      </p>
-    </div>
-
-      
-    
-  </div>
-)}
-      
-<div className="rounded-xl border border-amber-200 bg-amber-50 p-6 shadow">
+<div className="overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-sm">
   <div className="flex items-center justify-between">
     <div>
-      <h2 className="text-lg font-semibold text-gray-900">
-        Private Property Access
-      </h2>
-
-      <p className="mt-1 text-sm text-amber-700">
-        Sensitive access information for authorized team members.
-      </p>
+    <h2 className="text-xl font-semibold tracking-tight text-gray-900">
+  Private Property Access
+  </h2>
+<p className="mt-1 text-sm text-amber-700">
+  Sensitive access information for authorized team members.
+</p>
     </div>
     {propertyAccess && (
   <button
     type="button"
     onClick={() => setShowPrivateAccess((current) => !current)}
-    className="mr-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+   className="mr-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-50 hover:shadow-sm"
   >
     {showPrivateAccess ? "Hide Access" : "Show Access"}
   </button>
-)} 
+)}
 
     <button
       type="button"
@@ -1308,7 +1455,7 @@ const { data: workOrderData, error: workOrderError } = await supabase
         setPrivateNotes(propertyAccess?.private_notes || "");
         setEditingAccess(true);
       }}
-      className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
+      className="rounded-xl bg-[#102A43] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-md"
     >
       {propertyAccess ? "Edit Access" : "Add Access"}
     </button>
@@ -1352,7 +1499,7 @@ const { data: workOrderData, error: workOrderError } = await supabase
     : propertyAccess.lockbox_code
       ? "••••••••"
       : "Not provided"}
-</p> 
+</p>
       </div>
 
       <div>
@@ -1486,258 +1633,298 @@ const { data: workOrderData, error: workOrderError } = await supabase
     </div>
   </div>
 )}
-               </div>
+               <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+  <div className="border-b border-gray-100 px-6 py-5">
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            className="h-6 w-6"
+          >
+            <circle cx="9" cy="8" r="3" />
+            <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+            <path d="M16 5.5a3 3 0 0 1 0 5.8" />
+            <path d="M18 14.5a6 6 0 0 1 3 5.5" />
+          </svg>
+        </div>
 
-<div className="rounded-xl bg-white p-6 shadow">
-<div className="flex items-center justify-between">
-  <div>
-    <h2 className="text-xl font-semibold text-gray-900">
-      Property Contacts
-    </h2>
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight text-gray-900">
+            Property Contacts
+          </h2>
 
-    <p className="mt-1 text-sm text-gray-600">
-      People associated with this property.
-    </p>
-  </div>
-
-  <button
-    type="button"
-    onClick={() => {
-      setShowContactForm((current) => !current);
-      setContactFullName("");
-      setContactType("");
-      setContactEmail("");
-      setContactPhone("");
-    }}
-    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-  >
-    {showContactForm ? "Cancel" : "Add Contact"}
-  </button>
-</div>
-
-  <div className="mt-6">
-  {showContactForm && (
-  <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-5">
-    <h3 className="text-lg font-semibold text-gray-900">
-      Add Property Contact
-    </h3>
-
-    <div className="mt-4 grid gap-4 md:grid-cols-2">
-    <div>
-  <label className="text-sm font-medium text-gray-700">
-    Email
-  </label>
-
-  <input
-    type="email"
-    value={contactEmail}
-    onChange={(e) => setContactEmail(e.target.value)}
-    placeholder="email@example.com"
-    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-  />
-</div>
-<div>
-  <label className="text-sm font-medium text-gray-700">
-    Phone
-  </label>
-
-  <input
-    type="tel"
-    value={contactPhone}
-    onChange={(e) => setContactPhone(e.target.value)}
-    placeholder="(555) 555-5555"
-    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-  />
-</div>
-      <div>
-        <label className="text-sm font-medium text-gray-700">
-          Full Name
-        </label>
-        <input
-          type="text"
-          value={contactFullName}
-onChange={(e) => setContactFullName(e.target.value)}
-          placeholder="Contact name"
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-        />
+          <p className="mt-1 text-sm text-gray-500">
+            People associated with this property.
+          </p>
+        </div>
       </div>
 
-      <div>
-        <label className="text-sm font-medium text-gray-700">
-          Contact Type
-        </label>
-        <select
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-          value={contactType}
-onChange={(e) => setContactType(e.target.value)}
-        >
-          <option value="">Select type</option>
-          <option value="Owner">Owner</option>
-          <option value="Property Manager">Property Manager</option>
-          <option value="Tenant">Tenant</option>
-          <option value="Vendor">Vendor</option>
-          <option value="Emergency Contact">Emergency Contact</option>
-          <option value="Other">Other</option>
-          </select>
-      </div>
-    </div>
-
-    <div className="mt-5 flex gap-3">
       <button
         type="button"
         onClick={() => {
-          setShowContactForm(false);
+          setShowContactForm((current) => !current);
+          setEditingContactId(null);
           setContactFullName("");
           setContactType("");
           setContactEmail("");
           setContactPhone("");
         }}
-        className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        className="rounded-xl bg-[#102A43] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-md"
       >
-        Cancel
-      </button>
-
-      <button
-        type="button"
-        onClick={savePropertyContact}
-        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-      >
-        {editingContactId ? "Update Contact" : "Save Contact"}
+        {showContactForm ? "Cancel" : "+ Add Contact"}
       </button>
     </div>
   </div>
-)}
-{propertyContacts.length > 0 && (
-  <div className="mt-6 space-y-4">
-    {propertyContacts.map((contact) => (
-      <div
-        key={contact.id}
-        className="rounded-lg border border-gray-200 bg-white p-5"
-      >
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              {contact.full_name}
-            </h3>
 
-            {contact.contact_type && (
-              <p className="mt-1 text-sm text-gray-500">
-                {contact.contact_type}
-              </p>
-            )}
-          </div>
-          <button
-    type="button"
-    onClick={() => {
-      setEditingContactId(contact.id);
-      setContactFullName(contact.full_name);
-      setContactType(contact.contact_type || "");
+  <div className="p-6">
+    {showContactForm && (
+      <div className="mb-6 rounded-2xl border border-gray-200 bg-gray-50/70 p-5">
+        <div>
+          <h3 className="text-lg font-semibold tracking-tight text-gray-900">
+            {editingContactId ? "Edit Property Contact" : "Add Property Contact"}
+          </h3>
 
-      const emailMethod = contact.methods?.find(
-        (method) => method.method_type === "email"
-      );
-
-      const phoneMethod = contact.methods?.find(
-        (method) => method.method_type === "phone"
-      );
-
-      setContactEmail(emailMethod?.value || "");
-      setContactPhone(phoneMethod?.value || "");
-      setShowContactForm(true);
-    }}
-    className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-  >
-    Edit
-  </button>
-  <button
-  type="button"
-  onClick={() => deletePropertyContact(contact.id)}
-    className="rounded-lg border border-red-300 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
->
-  Delete
-</button>
+          <p className="mt-1 text-sm text-gray-500">
+            Enter the contact's information below.
+          </p>
         </div>
 
-        {contact.methods?.length > 0 && (
-          <div className="mt-4 space-y-2">
-            {contact.methods.map((method) => (
-              <div
-                key={method.id}
-                className="text-sm text-gray-700"
-              >
-                <span className="font-medium">
-                  {method.label}:
-                </span>{" "}
-                {method.value}
-              </div>
-            ))}
+        <div className="mt-5 grid gap-5 md:grid-cols-2">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Full Name
+            </label>
+
+            <input
+              type="text"
+              value={contactFullName}
+              onChange={(e) => setContactFullName(e.target.value)}
+              placeholder="Contact name"
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            />
           </div>
-        )}
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Contact Type
+            </label>
+
+            <select
+              value={contactType}
+              onChange={(e) => setContactType(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            >
+              <option value="">Select type</option>
+              <option value="Owner">Owner</option>
+              <option value="Property Manager">Property Manager</option>
+              <option value="Tenant">Tenant</option>
+              <option value="Vendor">Vendor</option>
+              <option value="Emergency Contact">Emergency Contact</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Email
+            </label>
+
+            <input
+              type="email"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+              placeholder="email@example.com"
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Phone
+            </label>
+
+            <input
+              type="tel"
+              value={contactPhone}
+              onChange={(e) => setContactPhone(e.target.value)}
+              placeholder="(555) 555-5555"
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3 border-t border-gray-200 pt-5">
+          <button
+            type="button"
+            onClick={() => {
+              setShowContactForm(false);
+              setEditingContactId(null);
+              setContactFullName("");
+              setContactType("");
+              setContactEmail("");
+              setContactPhone("");
+            }}
+            className="rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            onClick={savePropertyContact}
+            className="rounded-xl bg-[#102A43] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-md"
+          >
+            {editingContactId ? "Update Contact" : "Save Contact"}
+          </button>
+        </div>
       </div>
-    ))}
-  </div>
-)}
+    )}
+
     {loadingContacts ? (
-      <p className="text-sm text-gray-500">
-        Loading contacts...
-      </p>
+      <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
+        <p className="text-sm text-gray-500">
+          Loading contacts...
+        </p>
+      </div>
     ) : propertyContacts.length === 0 ? (
-      <p className="text-sm text-gray-500">
-        No contacts have been added to this property yet.
-      </p>
+      <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white text-gray-400 shadow-sm">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            className="h-6 w-6"
+          >
+            <circle cx="9" cy="8" r="3" />
+            <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+          </svg>
+        </div>
+
+        <p className="mt-3 font-semibold text-gray-900">
+          No contacts yet
+        </p>
+
+        <p className="mt-1 text-sm text-gray-500">
+          Add a contact associated with this property.
+        </p>
+      </div>
     ) : (
       <div className="space-y-4">
         {propertyContacts.map((contact) => (
           <div
             key={contact.id}
-            className="rounded-lg border border-gray-200 p-4"
+            className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-blue-200 hover:shadow-md"
           >
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="font-semibold text-gray-900">
-                  {contact.full_name}
-                </h3>
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    className="h-5 w-5"
+                  >
+                    <circle cx="12" cy="8" r="3" />
+                    <path d="M5 21c0-3.9 3.1-7 7-7s7 3.1 7 7" />
+                  </svg>
+                </div>
 
-                {contact.contact_type && (
-                  <p className="mt-1 text-sm text-gray-500">
-                    {contact.contact_type}
-                  </p>
-                )}
+                <div className="min-w-0">
+                  <h3 className="text-lg font-semibold tracking-tight text-gray-900">
+                    {contact.full_name}
+                  </h3>
+
+                  {contact.contact_type && (
+                    <p className="mt-1 text-sm text-gray-500">
+                      {contact.contact_type}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex shrink-0 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingContactId(contact.id);
+                    setContactFullName(contact.full_name);
+                    setContactType(contact.contact_type || "");
+
+                    const emailMethod = contact.methods?.find(
+                      (method) => method.method_type === "email"
+                    );
+
+                    const phoneMethod = contact.methods?.find(
+                      (method) => method.method_type === "phone"
+                    );
+
+                    setContactEmail(emailMethod?.value || "");
+                    setContactPhone(phoneMethod?.value || "");
+                    setShowContactForm(true);
+                  }}
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                >
+                  Edit
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => deletePropertyContact(contact.id)}
+                  className="rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                >
+                  Delete
+                </button>
               </div>
             </div>
 
-            {contact.methods.length > 0 && (
-              <div className="mt-3 space-y-1">
+            {contact.methods?.length > 0 && (
+              <div className="mt-5 grid gap-3 border-t border-gray-100 pt-4 md:grid-cols-2">
                 {contact.methods.map((method) => (
-                  <p
+                  <div
                     key={method.id}
-                    className="text-sm text-gray-700"
+                    className="rounded-xl bg-gray-50 px-4 py-3"
                   >
-                    <span className="font-medium">
-                      {method.label}:
-                    </span>{" "}
-                    {method.value}
-                  </p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-400">
+                      {method.label}
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-gray-800">
+                      {method.value}
+                    </p>
+                  </div>
                 ))}
               </div>
             )}
 
             {contact.notes && (
-              <p className="mt-3 whitespace-pre-wrap text-sm text-gray-600">
-                {contact.notes}
-              </p>
+              <div className="mt-4 rounded-xl bg-gray-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-400">
+                  Notes
+                </p>
+
+                <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
+                  {contact.notes}
+                </p>
+              </div>
             )}
           </div>
         ))}
       </div>
     )}
+      </div>
   </div>
 </div>
-
-</div>
 )}
-
-{activeTab === "Assets" && ( 
+{activeTab === "Assets" && (
   <div className="rounded-xl bg-white p-8 shadow">
     <div className="flex items-center justify-between">
       <div>
@@ -1762,14 +1949,14 @@ onChange={(e) => setContactType(e.target.value)}
     </h3>
 
     <div className="mt-5 grid gap-4 md:grid-cols-2">
-      
+
 
 <input
   placeholder="Asset Name"
   value={assetName}
   onChange={(e) => setAssetName(e.target.value)}
   className="rounded-lg border p-3"
-/> 
+/>
 <input
   placeholder="Asset Type"
   value={assetType}
@@ -1795,7 +1982,7 @@ onChange={(e) => setContactType(e.target.value)}
   value={assetSerialNumber}
   onChange={(e) => setAssetSerialNumber(e.target.value)}
   className="rounded-lg border p-3"
-/> 
+/>
 
 <input
   type="date"
@@ -2214,7 +2401,7 @@ onChange={(e) => setContactType(e.target.value)}
       Delete Work Order
     </button>
   )}
- 
+
 
     </div>
   </div>
@@ -2263,7 +2450,7 @@ onChange={(e) => setContactType(e.target.value)}
   <option value="In Progress">In Progress</option>
   <option value="Completed">Completed</option>
   <option value="Cancelled">Cancelled</option>
-</select> 
+</select>
             </div>
 
             {workOrder.description && (
