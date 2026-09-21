@@ -319,13 +319,13 @@ const statusFromUrl = searchParams.get("status");
     <AppLayout>
       <div className="max-w-7xl mx-auto">
       <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">
-          Work Orders
-        </h1>
+      <h1 className="text-3xl font-semibold tracking-tight text-[#102A43]">
+  Work Orders
+</h1>
 
-        <p className="mt-2 text-gray-600">
-          Manage maintenance work orders across all of your properties.
-        </p>
+<p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
+  Manage maintenance work orders across all of your properties.
+</p>
         <div className="mt-6">
   <label
     htmlFor="workOrderSearch"
