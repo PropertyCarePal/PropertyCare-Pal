@@ -454,7 +454,7 @@ const statusFromUrl = searchParams.get("status");
     setShowDueToday(false);
 setShowDueThisWeek(false);
   }}
-  className="rounded-xl border border-gray-200 bg-white p-5 text-left shadow-sm transition hover:border-emerald-300 hover:shadow-md"
+ className="rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm transition hover:border-blue-200 hover:shadow-md"
 >
   <p className="text-sm font-medium text-gray-500">
     Open
@@ -476,7 +476,7 @@ setShowDueThisWeek(false);
     setPriorityFilter("All");
     setStatusFilter("In Progress");
   }}
-  className="rounded-xl border-2 border-blue-300 bg-blue-50 p-5 text-left shadow-md transition hover:border-blue-500 hover:shadow-lg" 
+   className="rounded-2xl border border-blue-200 bg-blue-50 p-6 text-left shadow-sm transition hover:border-blue-300 hover:shadow-md"
 >
   <p className="text-sm font-medium text-gray-500">
     In Progress
@@ -502,9 +502,9 @@ setShowDueThisWeek(false);
     setPriorityFilter("All");
     setStatusFilter("Completed");
   }}
-  className="rounded-xl border border-gray-200 bg-white p-5 text-left shadow-sm transition hover:border-emerald-300 hover:shadow-md"
+  className="rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm transition hover:border-blue-200 hover:shadow-md"
 >
-  <p className="text-sm font-medium text-gray-500">
+<p className="text-sm font-medium text-gray-500">
     Completed
   </p>
 
@@ -526,7 +526,7 @@ setShowDueThisWeek(false);
     setShowDueToday(false);
 setShowDueThisWeek(false);
   }}
-  className="rounded-xl border-2 border-red-300 bg-red-50 p-5 text-left shadow-md transition hover:border-red-500 hover:shadow-lg"
+ className="rounded-2xl border border-red-200 bg-red-50 p-6 text-left shadow-sm transition hover:border-red-300 hover:shadow-md"
 >
   <p className="text-sm font-medium text-gray-500">
     Overdue
