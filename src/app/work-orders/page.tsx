@@ -556,7 +556,7 @@ setShowDueThisWeek(false);
     setShowDueToday(false);
 setShowDueThisWeek(false);
   }}
-  className="rounded-xl border-2 border-orange-300 bg-orange-50 p-5 text-left shadow-md transition hover:border-orange-500 hover:shadow-lg"
+  className="rounded-2xl border border-orange-200 bg-orange-50 p-6 text-left shadow-sm transition hover:border-orange-300 hover:shadow-md"
 >
   <p className="text-sm font-medium text-gray-500">
     Urgent
