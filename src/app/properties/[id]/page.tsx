@@ -1426,7 +1426,7 @@ const { data: workOrderData, error: workOrderError } = await supabase
 </div>
 
 <div className="overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-sm">
-  <div className="flex items-center justify-between">
+<div className="flex items-center justify-between px-8 py-7">
     <div>
     <h2 className="text-xl font-semibold tracking-tight text-gray-900">
   Private Property Access
@@ -2855,7 +2855,7 @@ const { data: workOrderData, error: workOrderError } = await supabase
 )}
 
 
-{activeTab === "Service History" && (
+     {activeTab === "Service History" && (
   <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
     <div className="border-b border-gray-200 px-8 py-7">
       <div className="flex items-center gap-3">
