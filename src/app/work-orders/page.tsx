@@ -340,7 +340,7 @@ const statusFromUrl = searchParams.get("status");
     value={searchTerm}
     onChange={(event) => setSearchTerm(event.target.value)}
     placeholder="Search work orders..."
-    className="w-full max-w-md rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none"
+    className="w-full max-w-md rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
   />
 </div>
         <div className="mt-6">
@@ -355,7 +355,7 @@ const statusFromUrl = searchParams.get("status");
     id="statusFilter"
     value={statusFilter}
     onChange={(event) => setStatusFilter(event.target.value)}
-    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none"
+    className="rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
   >
     <option value="All">All</option>
     <option value="Open">Open</option>
@@ -373,7 +373,7 @@ const statusFromUrl = searchParams.get("status");
   id="sortOption"
   value={sortOption}
   onChange={(event) => setSortOption(event.target.value)}
-  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none"
+  className="rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 >
   <option value="due_soonest">Due Date — Earliest First</option>
   <option value="due_latest">Due Date — Latest First</option>
@@ -406,7 +406,7 @@ const statusFromUrl = searchParams.get("status");
   showDueToday ||
   showDueThisWeek ||
   searchTerm) && (
-  <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+    <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
     <span className="font-semibold">Active filters:</span>{" "}
 
     {searchTerm && (
