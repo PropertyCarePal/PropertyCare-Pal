@@ -13,13 +13,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setLoading(true);
     setError("");
+    setMessage("");
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -34,6 +37,32 @@ export default function LoginPage() {
     }
 
     router.push("/");
+  }
+
+  async function handleForgotPassword() {
+    if (!email) {
+      setError("Please enter your email address first.");
+      return;
+    }
+
+    setResetLoading(true);
+    setError("");
+    setMessage("");
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    setResetLoading(false);
+
+    if (error) {
+      setError(error.message);
+      return;
+    }
+
+    setMessage(
+      "Password reset email sent. Please check your inbox."
+    );
   }
 
   return (
@@ -68,9 +97,20 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium">
-            Password
-          </label>
+          <div className="mb-2 flex items-center justify-between">
+            <label className="text-sm font-medium">
+              Password
+            </label>
+
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              disabled={resetLoading}
+              className="text-sm font-medium text-emerald-700 hover:text-emerald-800"
+            >
+              {resetLoading ? "Sending..." : "Forgot password?"}
+            </button>
+          </div>
 
           <input
             type="password"
@@ -84,6 +124,12 @@ export default function LoginPage() {
         {error && (
           <p className="text-red-600 text-sm">
             {error}
+          </p>
+        )}
+
+        {message && (
+          <p className="text-emerald-700 text-sm">
+            {message}
           </p>
         )}
 

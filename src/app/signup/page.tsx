@@ -1,11 +1,12 @@
 "use client";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseClient } from "@/lib/supabase";
 
 import AuthShell from "@/components/AuthShell";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 
 export default function SignupPage() {
+  const supabase = getSupabaseClient();
 
 
   const [email, setEmail] = useState("");
