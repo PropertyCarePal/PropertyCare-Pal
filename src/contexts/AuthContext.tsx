@@ -12,11 +12,13 @@ import { supabase } from "@/lib/supabase";
 
 type AuthContextType = {
   user: User | null;
+  role: string | null;
   loading: boolean;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  role: null,
   loading: true,
 });
 
@@ -26,25 +28,40 @@ export function AuthProvider({
   children: ReactNode;
 }) {
   const [user, setUser] = useState<User | null>(null);
+  const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadUser() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+  async function loadUser() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-      setUser(session?.user ?? null);
-      setLoading(false);
+    const currentUser = session?.user ?? null;
+
+    setUser(currentUser);
+
+    if (currentUser) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", currentUser.id)
+        .single();
+
+      setRole(profile?.role ?? null);
+    } else {
+      setRole(null);
     }
 
+    setLoading(false);
+  }
+
+  useEffect(() => {
     loadUser();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+    } = supabase.auth.onAuthStateChange(() => {
+      loadUser();
     });
 
     return () => {
@@ -53,7 +70,7 @@ export function AuthProvider({
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, role, loading }}>
       {children}
     </AuthContext.Provider>
   );

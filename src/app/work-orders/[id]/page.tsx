@@ -658,7 +658,7 @@ if (vendorError) {
 
         <Link
           href="/work-orders"
-          className="mt-4 inline-block text-emerald-600 hover:text-emerald-700"
+          className="mt-4 inline-block text-teal-600 hover:text-teal-700"
         >
           ← Back to Work Orders
         </Link>
@@ -927,7 +927,7 @@ if (vendorError) {
       <button
   type="button"
   onClick={saveWorkOrderChanges}
-  className="rounded-lg bg-emerald-600 px-5 py-3 font-medium text-white hover:bg-emerald-700"
+  className="rounded-lg bg-teal-600 px-5 py-3 font-medium text-white hover:bg-teal-700"
 >
   Save Changes
 </button> 
@@ -937,7 +937,7 @@ if (vendorError) {
       <div>
         <Link
           href="/work-orders"
-          className="text-sm font-medium text-emerald-600 hover:text-emerald-700"
+          className="text-sm font-medium text-teal-600 hover:text-teal-700"
         >
           ← Back to Work Orders
         </Link>
@@ -958,7 +958,7 @@ if (vendorError) {
             {property && (
               <Link
                 href={`/properties/${property.id}`}
-                className="mt-2 inline-block text-emerald-600 hover:text-emerald-700"
+                className="mt-2 inline-block text-teal-600 hover:text-teal-700"
               >
                 {property.name}
               </Link>
@@ -1004,7 +1004,7 @@ setEditVendorEmail(vendor?.email || "");
 setEditVendorNotes(vendor?.notes || "");
     setEditing(true);
   }}
-  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+  className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
 >
   Edit Work Order
 </button>
@@ -1042,7 +1042,7 @@ setEditVendorNotes(vendor?.notes || "");
 
   <label
     htmlFor="work-order-attachment-input"
-    className="cursor-pointer rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+    className="cursor-pointer rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
   >
     Upload File
   </label>
@@ -1064,7 +1064,7 @@ setEditVendorNotes(vendor?.notes || "");
           <button
   type="button"
   onClick={() => viewAttachment(attachment)}
-  className="font-medium text-emerald-700 hover:text-emerald-800 hover:underline"
+  className="font-medium text-teal-700 hover:text-teal-800 hover:underline"
 >
   {attachment.file_name}
 </button>
@@ -1102,15 +1102,15 @@ setEditVendorNotes(vendor?.notes || "");
             className={
               activity.description?.toLowerCase().includes("completed") ||
               activity.description?.toLowerCase().includes("closed")
-                ? "border-l-4 border-emerald-600 bg-emerald-50 rounded-r-lg py-3 pl-4"
-                : "border-l-2 border-emerald-500 pl-4"
+                ? "border-l-4 border-teal-600 bg-teal-50 rounded-r-lg py-3 pl-4"
+                : "border-l-2 border-teal-500 pl-4"
             }
           >
              
              {activity.description?.toLowerCase().includes("completed") ||
 activity.description?.toLowerCase().includes("closed") ? (
   <>
-    <p className="text-xs font-bold uppercase tracking-wider text-emerald-700">
+    <p className="text-xs font-bold uppercase tracking-wider text-teal-700">
       ✓ Work Order Closed
     </p>
 
@@ -1118,7 +1118,7 @@ activity.description?.toLowerCase().includes("closed") ? (
       {activity.description}
     </p>
 
-    <p className="mt-1 text-sm font-medium text-emerald-700">
+    <p className="mt-1 text-sm font-medium text-teal-700">
       Completed on{" "}
       {new Date(activity.created_at).toLocaleDateString()}
     </p>
@@ -1254,7 +1254,7 @@ activity.description?.toLowerCase().includes("closed") ? (
           </p>
           <a
             href={`tel:${vendor.phone}`}
-            className="mt-1 block text-base text-blue-600 hover:text-blue-800"
+            className="mt-1 block text-base text-cyan-600 hover:text-cyan-800"
           >
             {vendor.phone}
           </a>
@@ -1268,7 +1268,7 @@ activity.description?.toLowerCase().includes("closed") ? (
           </p>
           <a
             href={`mailto:${vendor.email}`}
-            className="mt-1 block text-base text-blue-600 hover:text-blue-800"
+            className="mt-1 block text-base text-cyan-600 hover:text-cyan-800"
           >
             {vendor.email}
           </a>

@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function Header() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const router = useRouter();
 
   async function handleLogout() {
@@ -32,8 +32,8 @@ export default function Header() {
           </p>
 
           <p className="text-sm text-gray-500">
-            Administrator
-          </p>
+  {role ?? "User"}
+</p>
         </div>
 
         <button

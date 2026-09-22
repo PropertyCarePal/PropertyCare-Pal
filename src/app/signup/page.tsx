@@ -4,8 +4,11 @@ import { getSupabaseClient } from "@/lib/supabase";
 import AuthShell from "@/components/AuthShell";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 export default function SignupPage() {
+  const searchParams = useSearchParams();
+const invitationId = searchParams.get("invitation");
   const supabase = getSupabaseClient();
 
 
@@ -24,20 +27,26 @@ export default function SignupPage() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: invitationId
+          ? { invitation_id: invitationId }
+          : undefined,
+      },
     });
   
-    setLoading(false);
-  
     if (error) {
+      setLoading(false);
       setError(error.message);
       return;
     }
+  
+    
+    setLoading(false);
   
     setError(
       "Account created! Please check your email to verify your account."
     );
   }
-   
   return (
     <AuthShell
       title="Create your account"

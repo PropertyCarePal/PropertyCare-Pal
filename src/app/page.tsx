@@ -5,6 +5,59 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/AppLayout";
 import { getSupabaseClient } from "@/lib/supabase";
+function HouseIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-6 w-6"
+    >
+      <path d="M3 10.5 12 3l9 7.5" />
+      <path d="M5 9.5V21h14V9.5" />
+      <path d="M9 21v-6h6v6" />
+    </svg>
+  );
+}
+
+function WrenchIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-6 w-6"
+    >
+      <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3.5 17.5a2.1 2.1 0 0 0 3 3l5.8-5.8a4 4 0 0 0 5.4-5.4l-2.3 2.3-2.7-.6-.6-2.7z" />
+    </svg>
+  );
+}
+
+function GearIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-6 w-6"
+    >
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V20h-2.5v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1A1.7 1.7 0 0 0 8 15a1.7 1.7 0 0 0-1.5-1H6v-2.5h.5A1.7 1.7 0 0 0 8 10a1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5V5h2.5v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.5V13h-.5a1.7 1.7 0 0 0-1.5 2z" />
+    </svg>
+  );
+}
 
 type WorkOrder = {
   id: string;
@@ -18,7 +71,7 @@ type WorkOrder = {
 
 export default function Home() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, role, loading } = useAuth();
   const supabase = getSupabaseClient();
 
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
@@ -188,6 +241,10 @@ setLoadingWorkOrders(false);
   }
 
   if (!user) {
+    return null;
+  }
+  if (role === "Client") {
+    router.push("/client-portal");
     return null;
   }
 
@@ -391,8 +448,8 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
       </div>
 
       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-        <span className="text-lg font-bold">P</span>
-      </div>
+  <HouseIcon />
+</div>
     </div>
   </div>
 
@@ -413,8 +470,8 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
       </div>
 
       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
-        <span className="text-lg font-bold">S</span>
-      </div>
+  <WrenchIcon />
+</div>
     </div>
   </div>
 
@@ -435,8 +492,8 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
       </div>
 
       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-        <span className="text-lg font-bold">A</span>
-      </div>
+  <GearIcon />
+</div>
     </div>
   </div>
 </section>
@@ -474,7 +531,20 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
         </div>
 
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-700">
-          <span className="text-lg font-bold">!</span>
+        <svg
+  xmlns="http://www.w3.org/2000/svg"
+  fill="none"
+  viewBox="0 0 24 24"
+  strokeWidth={2}
+  stroke="currentColor"
+  className="h-5 w-5"
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M12 9v3.75m0 3.75h.008M10.29 3.86 1.82 18a1.875 1.875 0 0 0 1.61 2.812h17.14A1.875 1.875 0 0 0 22.18 18L13.71 3.86a1.875 1.875 0 0 0-3.42 0Z"
+  />
+</svg>
         </div>
       </div>
 
@@ -504,7 +574,20 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
         </div>
 
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-700">
-          <span className="text-lg font-bold">!</span>
+        <svg
+  xmlns="http://www.w3.org/2000/svg"
+  fill="none"
+  viewBox="0 0 24 24"
+  strokeWidth={2}
+  stroke="currentColor"
+  className="h-5 w-5"
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M12 9v3.75m0 3.75h.008M10.29 3.86 1.82 18a1.875 1.875 0 0 0 1.61 2.812h17.14A1.875 1.875 0 0 0 22.18 18L13.71 3.86a1.875 1.875 0 0 0-3.42 0Z"
+  />
+</svg>
         </div>
       </div>
 
@@ -534,7 +617,25 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
         </div>
 
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-yellow-50 text-yellow-700">
-          <span className="text-lg font-bold">⏱</span>
+        <svg
+  xmlns="http://www.w3.org/2000/svg"
+  fill="none"
+  viewBox="0 0 24 24"
+  strokeWidth={2}
+  stroke="currentColor"
+  className="h-5 w-5"
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M12 6v6l4 2"
+  />
+  <circle
+    cx="12"
+    cy="12"
+    r="9"
+  />
+</svg>
         </div>
       </div>
 
@@ -577,7 +678,20 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
         </div>
 
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-          <span className="text-lg font-bold">O</span>
+        <svg
+  xmlns="http://www.w3.org/2000/svg"
+  fill="none"
+  viewBox="0 0 24 24"
+  strokeWidth={2}
+  stroke="currentColor"
+  className="h-5 w-5"
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M12 6v12m6-6H6"
+  />
+</svg>
         </div>
       </div>
 
@@ -607,7 +721,20 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
         </div>
 
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-700">
-          <span className="text-lg font-bold">I</span>
+        <svg
+  xmlns="http://www.w3.org/2000/svg"
+  fill="none"
+  viewBox="0 0 24 24"
+  strokeWidth={2}
+  stroke="currentColor"
+  className="h-5 w-5"
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M4.5 12h15m-7.5-7.5L19.5 12 12 19.5"
+  />
+</svg>
         </div>
       </div>
 
@@ -637,7 +764,20 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
         </div>
 
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-700">
-          <span className="text-lg font-bold">✓</span>
+        <svg
+  xmlns="http://www.w3.org/2000/svg"
+  fill="none"
+  viewBox="0 0 24 24"
+  strokeWidth={2}
+  stroke="currentColor"
+  className="h-5 w-5"
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="m5 12 4 4L19 6"
+  />
+</svg>
         </div>
       </div>
 
@@ -667,7 +807,20 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
         </div>
 
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600">
-          <span className="text-lg font-bold">C</span>
+        <svg
+  xmlns="http://www.w3.org/2000/svg"
+  fill="none"
+  viewBox="0 0 24 24"
+  strokeWidth={2}
+  stroke="currentColor"
+  className="h-5 w-5"
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M6 6l12 12M18 6 6 18"
+  />
+</svg>
         </div>
       </div>
 
@@ -709,7 +862,20 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
           >
             <div className="flex min-w-0 items-center gap-4">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-700">
-                <span className="text-lg font-bold">✓</span>
+              <svg
+  xmlns="http://www.w3.org/2000/svg"
+  fill="none"
+  viewBox="0 0 24 24"
+  strokeWidth={2}
+  stroke="currentColor"
+  className="h-5 w-5"
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="m5 12 4 4L19 6"
+  />
+</svg>
               </div>
 
               <div className="min-w-0">
@@ -765,7 +931,20 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
             <div className="flex items-start justify-between gap-4">
               <div className="flex min-w-0 items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-                  <span className="text-sm font-bold">M</span>
+                <svg
+  xmlns="http://www.w3.org/2000/svg"
+  fill="none"
+  viewBox="0 0 24 24"
+  strokeWidth={2}
+  stroke="currentColor"
+  className="h-5 w-5"
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M11 3.5a8.5 8.5 0 0 0 0 17h1.5a8.5 8.5 0 0 0 0-17H11Zm0 0v5m0 0h5"
+  />
+</svg>
                 </div>
 
                 <div className="min-w-0">
@@ -813,7 +992,20 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
     <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-500">
-          <span className="text-sm font-bold">P</span>
+        <svg
+  xmlns="http://www.w3.org/2000/svg"
+  fill="none"
+  viewBox="0 0 24 24"
+  strokeWidth={2}
+  stroke="currentColor"
+  className="h-5 w-5"
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="m2.25 12 9.75-9 9.75 9M4.5 10.5V21h15V10.5M9 21v-6h6v6"
+  />
+</svg>
         </div>
 
         <div>
@@ -841,9 +1033,9 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex min-w-0 items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-                  <span className="text-sm font-bold">P</span>
-                </div>
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+  <HouseIcon />
+</div>
 
                 <div className="min-w-0">
                   <h3 className="truncate font-semibold text-gray-900">
@@ -908,7 +1100,25 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-            <span className="text-sm font-bold">+</span>
+          <svg
+  xmlns="http://www.w3.org/2000/svg"
+  fill="none"
+  viewBox="0 0 24 24"
+  strokeWidth={2}
+  stroke="currentColor"
+  className="h-5 w-5"
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10Z"
+  />
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M12 10v6m-3-3h6"
+  />
+</svg>
           </div>
 
           <h3 className="mt-4 font-semibold text-gray-900">
@@ -934,7 +1144,20 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-            <span className="text-sm font-bold">W</span>
+          <svg
+  xmlns="http://www.w3.org/2000/svg"
+  fill="none"
+  viewBox="0 0 24 24"
+  strokeWidth={2}
+  stroke="currentColor"
+  className="h-5 w-5"
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M14.7 6.3a5 5 0 0 0-6.4 6.4l-5.1 5.1a1.4 1.4 0 0 0 2 2l5.1-5.1a5 5 0 0 0 6.4-6.4l-3 3-2-2 3-3Z"
+  />
+</svg>
           </div>
 
           <h3 className="mt-4 font-semibold text-gray-900">
@@ -960,7 +1183,21 @@ const dueSoonMaintenance = activeWorkOrders.filter((workOrder) => {
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-            <span className="text-sm font-bold">A</span>
+          <svg
+  xmlns="http://www.w3.org/2000/svg"
+  fill="none"
+  viewBox="0 0 24 24"
+  strokeWidth={2}
+  stroke="currentColor"
+  className="h-5 w-5"
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M10.3 3.2 9.7 5a7.9 7.9 0 0 0-1.8 1l-1.8-.6-1.4 1.4.6 1.8a7.9 7.9 0 0 0-1 1.8l-1.8.6v2l1.8.6a7.9 7.9 0 0 0 1 1.8l-.6 1.8 1.4 1.4 1.8-.6a7.9 7.9 0 0 0 1.8 1l.6 1.8h2l.6-1.8a7.9 7.9 0 0 0 1.8-1l1.8.6 1.4-1.4-.6-1.8a7.9 7.9 0 0 0 1-1.8l1.8-.6v-2l-1.8-.6a7.9 7.9 0 0 0-1-1.8l.6-1.8-1.4-1.4-1.8.6a7.9 7.9 0 0 0-1.8-1l-.6-1.8h-2Z"
+  />
+  <circle cx="11.3" cy="12" r="2.5" />
+</svg>
           </div>
 
           <h3 className="mt-4 font-semibold text-gray-900">
