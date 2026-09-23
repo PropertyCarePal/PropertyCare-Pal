@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 const menuItems = [
   { name: "My Property", href: "/client-portal", icon: "property" },
-  { name: "Work Orders", href: "/client-portal/work-orders", icon: "work-orders" },
+  { name: "Work Orders", href: "/client-work-orders", icon: "work-orders" },
   { name: "Inspections", href: "/client-portal/inspections", icon: "inspections" },
   { name: "Assets", href: "/client-portal/assets", icon: "assets" },
   { name: "Documents", href: "/client-portal/documents", icon: "documents" },

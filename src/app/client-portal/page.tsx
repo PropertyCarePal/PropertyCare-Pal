@@ -239,15 +239,24 @@ export default function ClientPortalPage() {
             </p>
           </div>
 
-          <div className="text-right">
-            <p className="text-sm font-medium text-gray-900">
-              Property Owner
-            </p>
+          <div className="flex items-center gap-4">
+  <div className="text-right">
+    <p className="text-sm font-medium text-gray-900">
+      Property Owner
+    </p>
+    <p className="text-xs text-gray-500">Client Portal</p>
+  </div>
 
-            <p className="text-xs text-gray-500">
-              Client Portal
-            </p>
-          </div>
+  <button
+    onClick={async () => {
+      await supabase.auth.signOut();
+      window.location.href = "/login";
+    }}
+    className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+  >
+    Logout
+  </button>
+</div>
         </header>
 
         <main className="flex-1 p-8">
@@ -443,7 +452,7 @@ export default function ClientPortalPage() {
                   </div>
                 </div>
 
-               
+
                 {/* PORTAL SECTIONS */}
                 <div className="mt-8 grid gap-6 md:grid-cols-3">
                   <div className="rounded-xl bg-white p-6 shadow-sm">

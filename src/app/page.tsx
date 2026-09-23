@@ -73,6 +73,11 @@ export default function Home() {
   const router = useRouter();
   const { user, role, loading } = useAuth();
   const supabase = getSupabaseClient();
+  useEffect(() => {
+    if (!loading && user && role === "Client") {
+      router.push("/client-portal");
+    }
+  }, [loading, user, role, router]);
 
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [propertyActivity, setPropertyActivity] = useState<
@@ -243,10 +248,7 @@ setLoadingWorkOrders(false);
   if (!user) {
     return null;
   }
-  if (role === "Client") {
-    router.push("/client-portal");
-    return null;
-  }
+  
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
