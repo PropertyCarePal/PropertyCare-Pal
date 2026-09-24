@@ -8,6 +8,7 @@ const menuItems = [
   { name: "Properties", href: "/properties", icon: "properties" },
   { name: "Work Orders", href: "/work-orders", icon: "work-orders" },
   { name: "Assets", href: "/assets", icon: "assets" },
+  { name: "Maintenance", href: "/maintenance", icon: "maintenance" },
   { name: "Vendors", href: "/vendors", icon: "vendors" },
   { name: "Inspections", href: "/inspections", icon: "inspections" },
   { name: "Documents", href: "/documents", icon: "documents" },
