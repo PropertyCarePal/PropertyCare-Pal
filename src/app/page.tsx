@@ -70,6 +70,8 @@ type WorkOrder = {
 };
 
 export default function Home() {
+  const today = new Date();
+today.setHours(0, 0, 0, 0);
   const router = useRouter();
   const { user, role, loading } = useAuth();
   const supabase = getSupabaseClient();
@@ -101,6 +103,9 @@ const [loadingWorkOrders, setLoadingWorkOrders] = useState(true);
   }, [loading, user, router]);
 
   useEffect(() => {
+    const today = new Date();
+
+today.setHours(0, 0, 0, 0);
     async function loadWorkOrders() {
       if (!user) return;
 
@@ -248,11 +253,9 @@ setLoadingWorkOrders(false);
   if (!user) {
     return null;
   }
-  
+ 
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
+ 
   const sevenDaysFromNow = new Date(today);
   sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
 

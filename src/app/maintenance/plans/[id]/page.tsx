@@ -13,6 +13,11 @@ type MaintenanceTemplate = {
   season: string | null;
   is_active: boolean;
 };
+type Property = {
+    id: string;
+    name: string;
+    maintenancePlanId?: string;
+  };
 type MaintenanceTemplateItem = {
     id: string;
     name: string;
@@ -32,19 +37,17 @@ export default function MaintenancePlanPage() {
   const [plan, setPlan] = useState<MaintenanceTemplate | null>(null);
   const [loadingPlan, setLoadingPlan] = useState(true);
   const [items, setItems] = useState<MaintenanceTemplateItem[]>([]);
-  type Property = {
-    id: string;
-    name: string;
-  };
   
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedPropertyId, setSelectedPropertyId] = useState("");
 const [savingAssignment, setSavingAssignment] = useState(false);
+const [creatingTasks, setCreatingTasks] = useState(false);
 const [assignedProperties, setAssignedProperties] = useState<Property[]>([]);
   const [itemName, setItemName] = useState("");
 const [itemDescription, setItemDescription] = useState("");
 const [recommendedMonth, setRecommendedMonth] = useState("");
 const [savingItem, setSavingItem] = useState(false);
+
 async function handleAssignPlan() {
     if (!user || !planId) return;
   
@@ -100,7 +103,90 @@ async function handleAssignPlan() {
   
     alert("Maintenance plan assigned successfully.");
   }
-async function handleCreateItem() {
+  
+  async function handleCreateTasks() {
+    if (!user || !planId) return;
+  
+    if (assignedProperties.length === 0) {
+      alert("Please assign this maintenance plan to a property first.");
+      return;
+    }
+  
+    setCreatingTasks(true);
+  
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("organization_id")
+        .eq("id", user.id)
+        .single();
+  
+      if (profileError || !profile?.organization_id) {
+        console.error("Error loading profile:", profileError);
+        alert("Unable to determine your organization.");
+        return;
+      }
+  
+      const { data: templateItems, error: itemsError } = await supabase
+        .from("maintenance_template_items")
+        .select("id, name, description")
+        .eq("template_id", planId)
+        .eq("is_active", true)
+        .order("sort_order")
+        .order("created_at");
+  
+      if (itemsError) {
+        console.error(
+          "Error loading maintenance plan items:",
+          itemsError
+        );
+        alert("Unable to load maintenance plan items.");
+        return;
+      }
+  
+      if (!templateItems || templateItems.length === 0) {
+        alert("This maintenance plan has no active maintenance items.");
+        return;
+      }
+      console.log("Assigned properties for task creation:", assignedProperties);
+      const tasksToCreate = assignedProperties.flatMap((property) =>
+        templateItems.map((item) => ({
+          organization_id: profile.organization_id,
+          property_id: property.id,
+          plan_id: property.maintenancePlanId,
+          template_item_id: item.id,
+          name: item.name,
+          description: item.description,
+          asset_id: null,
+          assigned_to: null,
+          status: "pending",
+        }))
+      );
+      console.log("Tasks being created:", tasksToCreate);
+      const { error: insertError } = await supabase
+        .from("maintenance_tasks")
+        .insert(tasksToCreate);
+  
+      if (insertError) {
+        console.error(
+          "Error creating maintenance tasks:",
+          insertError
+        );
+        alert("Unable to create maintenance tasks.");
+        return;
+      }
+  
+      alert(
+        `${tasksToCreate.length} maintenance task${
+          tasksToCreate.length === 1 ? "" : "s"
+        } created successfully.`
+      );
+    } finally {
+      setCreatingTasks(false);
+    }
+  }
+  
+  async function handleCreateItem() {
     if (!user || !planId) return;
   
     if (!itemName.trim()) {
@@ -124,13 +210,13 @@ async function handleCreateItem() {
       });
   
     if (error) {
-        console.error(
-            "Error creating maintenance item:",
-            error.message,
-            error.details,
-            error.hint,
-            error.code
-          );
+      console.error(
+        "Error creating maintenance item:",
+        error.message,
+        error.details,
+        error.hint,
+        error.code
+      );
       alert("Unable to create maintenance item.");
       setSavingItem(false);
       return;
@@ -140,11 +226,11 @@ async function handleCreateItem() {
     setItemDescription("");
     setRecommendedMonth("");
     setSavingItem(false);
-    
+  
     document
       .getElementById("create-maintenance-item-form")
       ?.classList.add("hidden");
-    
+  
     const { data: refreshedItems, error: refreshError } = await supabase
       .from("maintenance_template_items")
       .select(
@@ -153,14 +239,16 @@ async function handleCreateItem() {
       .eq("template_id", planId)
       .order("sort_order")
       .order("created_at");
-    
+  
     if (refreshError) {
       console.error("Error refreshing maintenance items:", refreshError);
       return;
     }
-    
+  
     setItems(refreshedItems ?? []);
-  }
+  } 
+  
+
   useEffect(() => {
     if (!loading && !user) {
       router.push("/login");
@@ -219,13 +307,11 @@ async function handleCreateItem() {
       } else {
         setProperties(propertyData ?? []);
       }
-  
-      const {
-        data: assignedPropertyData,
-        error: assignedPropertyError,
-      } = await supabase
+      const { data: assignedPropertyData, error: assignedPropertyError } =
+      await supabase
         .from("property_maintenance_plans")
         .select(`
+          id,
           property_id,
           properties (
             id,
@@ -233,6 +319,8 @@ async function handleCreateItem() {
           )
         `)
         .eq("template_id", planId);
+     
+      
   
       if (assignedPropertyError) {
         console.error(
@@ -242,15 +330,21 @@ async function handleCreateItem() {
         setAssignedProperties([]);
       } else {
         const uniqueAssignedProperties = new Map<string, Property>();
-  
+
         (assignedPropertyData ?? []).forEach((item) => {
-          const property = item.properties as Property | null;
-  
+          const property = Array.isArray(item.properties)
+            ? (item.properties[0] as { id: string; name: string } | undefined)
+            : (item.properties as { id: string; name: string } | null);
+        
           if (property) {
-            uniqueAssignedProperties.set(property.id, property);
+            uniqueAssignedProperties.set(property.id, {
+              id: property.id,
+              name: property.name,
+              maintenancePlanId: item.id,
+            });
           }
         });
-  
+        
         setAssignedProperties(
           Array.from(uniqueAssignedProperties.values())
         );
@@ -397,6 +491,14 @@ onChange={(e) => setSelectedPropertyId(e.target.value)}
   <h2 className="text-xl font-semibold text-gray-900">
     Assigned Properties
   </h2>
+  <button
+  type="button"
+  onClick={handleCreateTasks}
+  disabled={creatingTasks}
+  className="mt-4 rounded-lg bg-green-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+>
+  {creatingTasks ? "Creating Tasks..." : "Create Maintenance Tasks"}
+</button>
 
   {assignedProperties.length === 0 ? (
     <p className="mt-4 text-sm text-gray-500">
