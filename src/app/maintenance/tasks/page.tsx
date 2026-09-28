@@ -14,6 +14,7 @@ type MaintenanceTask = {
   status: string;
   scheduled_date: string | null;
   completed_date: string | null;
+  work_order_id: string | null;
   property_id: string;
   property_name?: string;
 };
@@ -58,18 +59,19 @@ export default function MaintenanceTasksPage() {
       const { data, error } = await supabase
         .from("maintenance_tasks")
         .select(`
-          id,
-          name,
-          description,
-          status,
-          scheduled_date,
-          completed_date,
-          property_id,
-          properties (
             id,
-            name
-          )
-        `)
+            name,
+            description,
+            status,
+            scheduled_date,
+            completed_date,
+            work_order_id,
+            property_id,
+            properties (
+              id,
+              name
+            )
+          `) 
         .eq("organization_id", profile.organization_id)
         .order("scheduled_date", {
           ascending: true,
@@ -95,7 +97,8 @@ export default function MaintenanceTasksPage() {
             status: task.status,
             scheduled_date: task.scheduled_date,
             completed_date: task.completed_date,
-            property_id: task.property_id,
+work_order_id: task.work_order_id,
+property_id: task.property_id,
             property_name: property?.name ?? "Unknown Property",
           };
         }
@@ -247,6 +250,9 @@ export default function MaintenanceTasksPage() {
                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                       Completed
                     </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+  Action
+</th>
                   </tr>
                 </thead>
 
@@ -296,6 +302,23 @@ export default function MaintenanceTasksPage() {
                       <td className="px-6 py-5 text-sm text-gray-600">
                         {formatDate(task.completed_date)}
                       </td>
+                      <td className="px-6 py-5">
+  {task.work_order_id ? (
+    <span className="text-sm font-medium text-green-700">
+      Work Order Created
+    </span>
+  ) : (
+    <button
+      type="button"
+      onClick={() =>
+        router.push(`/work-orders/new?maintenanceTaskId=${task.id}`)
+      }
+      className="rounded-lg bg-[#102A43] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0b2033]"
+    >
+      Create Work Order
+    </button>
+  )}
+</td>
                     </tr>
                   ))}
                 </tbody>
