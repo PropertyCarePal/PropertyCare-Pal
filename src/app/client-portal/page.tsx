@@ -21,6 +21,14 @@ type WorkOrder = {
   priority: string | null;
   due_date: string | null;
   property_id: string;
+  completed_at: string | null;
+  actual_cost: number | null;
+  completion_notes: string | null;
+};
+type WorkOrderVendor = {
+  work_order_id: string;
+  company_name: string | null;
+  contact_name: string | null;
 };
 
 export default function ClientPortalPage() {
@@ -28,9 +36,14 @@ export default function ClientPortalPage() {
 
   const [property, setProperty] = useState<Property | null>(null);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
+  const [workOrderVendors, setWorkOrderVendors] = useState<
+  WorkOrderVendor[]
+>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+  const [activeTab, setActiveTab] = useState<
+  "Overview" | "Assets" | "Work Orders" | "Service History"
+>("Overview");
   const [currentMonth, setCurrentMonth] = useState(() => {
     const today = new Date();
     return new Date(today.getFullYear(), today.getMonth(), 1);
@@ -85,7 +98,7 @@ export default function ClientPortalPage() {
           await supabase
             .from("work_orders")
             .select(
-              "id, title, status, priority, due_date, property_id"
+              "id, title, status, priority, due_date, property_id, completed_at, actual_cost, completion_notes"
             )
             .eq("property_id", access.property_id)
             .order("due_date", { ascending: true });
@@ -95,6 +108,19 @@ export default function ClientPortalPage() {
         }
 
         setWorkOrders(workOrderData ?? []);
+        const { data: vendorData, error: vendorError } = await supabase
+  .from("work_order_vendors")
+  .select("work_order_id, company_name, contact_name")
+  .in(
+    "work_order_id",
+    (workOrderData ?? []).map((workOrder) => workOrder.id)
+  );
+
+if (vendorError) {
+  throw vendorError;
+}
+
+setWorkOrderVendors(vendorData ?? []);
       } catch (err) {
         console.error("CLIENT PORTAL ERROR:", err);
 
@@ -261,7 +287,35 @@ export default function ClientPortalPage() {
 
         <main className="flex-1 p-8">
           <div className="mx-auto max-w-6xl">
-
+          <div className="mb-8 border-b border-gray-200">
+  <div className="flex flex-wrap gap-8">
+    {["Overview", "Assets", "Work Orders", "Service History"].map(
+      (tab) => (
+        <button
+          key={tab}
+          type="button"
+          onClick={() =>
+            setActiveTab(
+              tab as
+                | "Overview"
+                | "Assets"
+                | "Work Orders"
+                | "Service History"
+            )
+          }
+          className={
+            "border-b-2 pb-3 text-sm font-semibold transition " +
+            (activeTab === tab
+              ? "border-[#102A43] text-[#102A43]"
+              : "border-transparent text-gray-500 hover:text-gray-900")
+          }
+        >
+          {tab}
+        </button>
+      )
+    )}
+  </div>
+</div>
             <div className="mb-8">
               <p className="text-sm font-medium uppercase tracking-wide text-blue-700">
                 Property Overview
@@ -277,9 +331,9 @@ export default function ClientPortalPage() {
               </p>
             </div>
 
-            {property && (
-              <>
-              {/* PROPERTY INFORMATION */}
+            {property && activeTab === "Overview" && (
+  <>
+   {/* PROPERTY INFORMATION */}
               <div className="mt-8 rounded-xl bg-white p-6 shadow-sm">
                   <div className="flex items-start justify-between">
                     <div>
@@ -334,126 +388,248 @@ export default function ClientPortalPage() {
                     </div>
                   </div>
                 </div>
+                </>
+)}
+{activeTab === "Work Orders" && (
+  <div className="rounded-xl bg-white shadow-sm">
+    <div className="flex flex-col gap-4 border-b p-6 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h2 className="text-xl font-bold text-gray-900">
+          Work Orders
+        </h2>
+        <p className="mt-1 text-sm text-gray-500">
+          Scheduled property work
+        </p>
+      </div>
 
-                {/* CALENDAR */}
-                <div className="rounded-xl bg-white shadow-sm">
-                  <div className="flex flex-col gap-4 border-b p-6 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="text-sm font-medium uppercase tracking-wide text-blue-700">
-                        Property Calendar
-                      </p>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={previousMonth}
+          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+        >
+          Previous
+        </button>
 
-                      <h3 className="mt-1 text-2xl font-bold text-gray-900">
-                        {currentMonth.toLocaleString("default", {
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </h3>
+        <button
+          type="button"
+          onClick={goToToday}
+          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+        >
+          Today
+        </button>
 
-                      <p className="mt-1 text-sm text-gray-500">
-                        Scheduled maintenance and property activity
-                      </p>
-                    </div>
+        <button
+          type="button"
+          onClick={nextMonth}
+          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+        >
+          Next
+        </button>
+      </div>
+    </div>
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={previousMonth}
-                        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                      >
-                        ←
-                      </button>
+    <div className="p-4 md:p-6">
+      <div className="mb-6 text-center">
+        <h3 className="text-2xl font-bold text-gray-900">
+          {currentMonth.toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric",
+          })}
+        </h3>
+      </div>
 
-                      <button
-                        onClick={goToToday}
-                        className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                      >
-                        Today
-                      </button>
+      <div className="grid grid-cols-7 border-l border-t border-gray-200">
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+          (day) => (
+            <div
+              key={day}
+              className="border-b border-r border-gray-200 bg-gray-50 p-3 text-center text-xs font-semibold text-gray-500"
+            >
+              {day}
+            </div>
+          )
+        )}
 
-                      <button
-                        onClick={nextMonth}
-                        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                      >
-                        →
-                      </button>
-                    </div>
+        {calendarDays.map((date, index) => {
+          const dayWorkOrders = date
+            ? getWorkOrdersForDate(date)
+            : [];
+
+          return (
+            <div
+              key={index}
+              className="min-h-[120px] border-b border-r border-gray-200 p-2"
+            >
+              {date && (
+                <>
+                  <div
+                    className={
+                      "mb-2 flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold " +
+                      (isToday(date)
+                        ? "bg-[#102A43] text-white"
+                        : "text-gray-700")
+                    }
+                  >
+                    {date.getDate()}
                   </div>
 
-                  <div className="p-4 md:p-6">
-                    <div className="grid grid-cols-7 border-l border-t border-gray-200">
-                      {[
-                        "Sun",
-                        "Mon",
-                        "Tue",
-                        "Wed",
-                        "Thu",
-                        "Fri",
-                        "Sat",
-                      ].map((day) => (
-                        <div
-                          key={day}
-                          className="border-b border-r border-gray-200 bg-gray-50 px-2 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500"
-                        >
-                          {day}
-                        </div>
-                      ))}
+                  <div className="space-y-1">
+                  {dayWorkOrders.map((workOrder) => (
+  <button
+    key={workOrder.id}
+    type="button"
+    onClick={() =>
+      (window.location.href = `/client-work-orders/${workOrder.id}`)
+    }
+    className={
+      "block w-full rounded-md px-2 py-1.5 text-left transition " +
+      (workOrder.status === "Completed"
+        ? "bg-gray-100 text-gray-500 line-through"
+        : workOrder.status === "Cancelled"
+          ? "bg-gray-50 text-gray-400 line-through"
+          : "bg-blue-50 text-blue-900 hover:bg-blue-100")
+    }
+  >
+                        <p className="truncate text-xs font-semibold text-blue-900">
+                          {workOrder.title}
+                        </p>
 
-                      {calendarDays.map((date, index) => {
-                        const dayWorkOrders = date
-                          ? getWorkOrdersForDate(date)
-                          : [];
+                        <p
+  className={
+    "text-[11px] " +
+    (workOrder.status === "Completed"
+      ? "text-gray-500"
+      : workOrder.status === "Cancelled"
+        ? "text-gray-400"
+        : "text-blue-700")
+  }
+>
+  {workOrder.status || "Scheduled"}
+</p>  
+                        </button>
+))}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+)}
+{activeTab === "Service History" && (
+  <div className="rounded-xl bg-white shadow-sm">
+    <div className="border-b p-6">
+      <h2 className="text-xl font-bold text-gray-900">
+        Service History
+      </h2>
+      <p className="mt-1 text-sm text-gray-500">
+        Completed maintenance and service performed on your property.
+      </p>
+    </div>
 
-                        return (
-                          <div
-                            key={index}
-                            className={`min-h-[120px] border-b border-r border-gray-200 p-2 ${
-                              date
-                                ? "bg-white"
-                                : "bg-gray-50"
-                            }`}
-                          >
-                            {date && (
-                              <>
-                                <div
-                                  className={`mb-2 flex h-7 w-7 items-center justify-center rounded-full text-sm font-medium ${
-                                    isToday(date)
-                                      ? "bg-blue-600 text-white"
-                                      : "text-gray-700"
-                                  }`}
-                                >
-                                  {date.getDate()}
-                                </div>
+    <div className="p-6">
+      {workOrders.filter(
+        (workOrder) => workOrder.status === "Completed"
+      ).length === 0 ? (
+        <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
+          <p className="text-sm font-medium text-gray-700">
+            No completed service history yet.
+          </p>
+          <p className="mt-1 text-sm text-gray-500">
+            Completed work orders will appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {workOrders
+            .filter(
+              (workOrder) => workOrder.status === "Completed"
+            )
+            .sort((a, b) => {
+              const dateA = a.completed_at
+                ? new Date(a.completed_at).getTime()
+                : 0;
+              const dateB = b.completed_at
+                ? new Date(b.completed_at).getTime()
+                : 0;
 
-                                <div className="space-y-1">
-                                  {dayWorkOrders.map(
-                                    (workOrder) => (
-                                      <div
-                                        key={workOrder.id}
-                                        className="rounded-md bg-blue-50 px-2 py-1.5"
-                                      >
-                                        <p className="truncate text-xs font-semibold text-blue-800">
-                                          {workOrder.title}
-                                        </p>
+              return dateB - dateA;
+            })
+            .map((workOrder) => {
+              const vendor = workOrderVendors.find(
+                (item) => item.work_order_id === workOrder.id
+              );
+            
+              return (
+                <button
+                key={workOrder.id}
+                type="button"
+                onClick={() =>
+                  (window.location.href = `/client-work-orders/${workOrder.id}`)
+                }
+                className="block w-full rounded-lg border border-gray-200 bg-white p-5 text-left transition hover:border-blue-300 hover:bg-blue-50"
+              >
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <h3 className="text-base font-semibold text-gray-900">
+                      {workOrder.title}
+                    </h3>
 
-                                        <p className="text-[11px] text-blue-600">
-                                          {workOrder.status ||
-                                            "Scheduled"}
-                                        </p>
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {workOrder.completed_at
+                        ? `Completed ${new Date(
+                            workOrder.completed_at
+                          ).toLocaleDateString("en-US", {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          })}`
+                        : "Completed"}
+                    </p>
+
+                    {workOrder.completion_notes && (
+                      <p className="mt-3 text-sm text-gray-600">
+                        {workOrder.completion_notes}
+                      </p>
+                    )}
+                    {vendor?.company_name && (
+  <p className="mt-3 text-sm font-medium text-gray-700">
+    Service Provider: {vendor.company_name}
+  </p>
+)}
+                  </div>
+
+                  <div className="text-left md:text-right">
+                    {workOrder.actual_cost !== null && (
+                      <p className="text-base font-semibold text-gray-900">
+                        ${Number(workOrder.actual_cost).toLocaleString(
+                          "en-US",
+                          {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }
+                        )}
+                      </p>
+                    )}
+
+                    <p className="mt-1 text-xs font-medium text-gray-500">
+                      {workOrder.priority || "Standard"} priority
+                    </p>
                   </div>
                 </div>
-
-
-                {/* PORTAL SECTIONS */}
+                </button>
+);
+})}
+        </div>
+      )}
+    </div>
+  </div>
+)}
+{/* PORTAL SECTIONS */}
+                {activeTab === "Overview" && (
                 <div className="mt-8 grid gap-6 md:grid-cols-3">
                   <div className="rounded-xl bg-white p-6 shadow-sm">
                     <p className="text-sm font-medium text-gray-500">
@@ -498,7 +674,7 @@ export default function ClientPortalPage() {
                     </p>
                   </div>
                 </div>
-              </>
+              
             )}
           </div>
         </main>
