@@ -15,6 +15,7 @@ type MaintenanceTask = {
   scheduled_date: string | null;
   completed_date: string | null;
   work_order_id: string | null;
+  work_order_due_date: string | null;
   property_id: string;
   property_name?: string;
 };
@@ -56,27 +57,27 @@ export default function MaintenanceTasksPage() {
         return;
       }
 
-      const { data, error } = await supabase
-        .from("maintenance_tasks")
-        .select(`
-            id,
-            name,
-            description,
-            status,
-            scheduled_date,
-            completed_date,
-            work_order_id,
-            property_id,
-            properties (
-              id,
-              name
-            )
-          `) 
-        .eq("organization_id", profile.organization_id)
-        .order("scheduled_date", {
-          ascending: true,
-          nullsFirst: false,
-        });
+    const { data, error } = await supabase
+  .from("maintenance_tasks")
+  .select(`
+      id,
+      name,
+      description,
+      status,
+      scheduled_date,
+      completed_date,
+      work_order_id,
+      property_id,
+      properties (
+        id,
+        name
+      )
+    `)
+  .eq("organization_id", profile.organization_id)
+  .order("scheduled_date", {
+    ascending: true,
+    nullsFirst: false,
+  });
 
       if (error) {
         console.error("Error loading maintenance tasks:", error);
@@ -84,12 +85,32 @@ export default function MaintenanceTasksPage() {
         return;
       }
 
-      const formattedTasks: MaintenanceTask[] = (data ?? []).map(
-        (task) => {
+      const tasksWithWorkOrders = await Promise.all(
+        (data ?? []).map(async (task) => {
+          let workOrderDueDate: string | null = null;
+      
+          if (task.work_order_id) {
+            const { data: workOrder, error: workOrderError } =
+              await supabase
+                .from("work_orders")
+                .select("due_date")
+                .eq("id", task.work_order_id)
+                .maybeSingle();
+      
+            if (workOrderError) {
+              console.error(
+                "Error loading work order:",
+                workOrderError
+              );
+            }
+      
+            workOrderDueDate = workOrder?.due_date ?? null;
+          }
+      
           const property = Array.isArray(task.properties)
             ? task.properties[0]
             : task.properties;
-
+      
           return {
             id: task.id,
             name: task.name,
@@ -97,14 +118,15 @@ export default function MaintenanceTasksPage() {
             status: task.status,
             scheduled_date: task.scheduled_date,
             completed_date: task.completed_date,
-work_order_id: task.work_order_id,
-property_id: task.property_id,
+            work_order_id: task.work_order_id,
+            work_order_due_date: workOrderDueDate,
+            property_id: task.property_id,
             property_name: property?.name ?? "Unknown Property",
           };
-        }
+        })
       );
-
-      setTasks(formattedTasks);
+      
+      setTasks(tasksWithWorkOrders);
       setLoadingTasks(false);
     }
 
@@ -296,7 +318,7 @@ property_id: task.property_id,
   </select>
 </td>
                       <td className="px-6 py-5 text-sm text-gray-600">
-                        {formatDate(task.scheduled_date)}
+                      {formatDate(task.work_order_due_date || task.scheduled_date)}
                       </td>
 
                       <td className="px-6 py-5 text-sm text-gray-600">
