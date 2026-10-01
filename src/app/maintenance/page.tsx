@@ -13,12 +13,21 @@ type MaintenanceTemplate = {
   season: string | null;
   is_active: boolean;
 };
+type PropertyMaintenancePlan = {
+    id: string;
+    name: string;
+    description: string | null;
+    property_id: string;
+    is_active: boolean;
+    property_name: string;
+  };
 
 export default function MaintenancePage() {
   const { user, role, loading } = useAuth();
   const router = useRouter();
 
   const [templates, setTemplates] = useState<MaintenanceTemplate[]>([]);
+  const [propertyPlans, setPropertyPlans] = useState<PropertyMaintenancePlan[]>([]);
   const [loadingTemplates, setLoadingTemplates] = useState(true);
   const [planName, setPlanName] = useState("");
 const [season, setSeason] = useState("");
@@ -114,6 +123,59 @@ const [savingPlan, setSavingPlan] = useState(false);
     }
 
     loadTemplates();
+  }, [user, role]);
+  useEffect(() => {
+    async function loadPropertyPlans() {
+      if (!user || role === "Client") return;
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("organization_id")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError || !profile?.organization_id) {
+        console.error("Error loading organization:", profileError);
+        setPropertyPlans([]);
+        return;
+      }
+
+      const { data: planData, error: planError } = await supabase
+        .from("property_maintenance_plans")
+        .select("id, name, description, property_id, is_active")
+        .eq("organization_id", profile.organization_id)
+        .order("name", { ascending: true });
+
+      if (planError) {
+        console.error("Error loading property maintenance plans:", planError);
+        setPropertyPlans([]);
+        return;
+      }
+
+      const { data: propertyData, error: propertyError } = await supabase
+        .from("properties")
+        .select("id, name")
+        .eq("organization_id", profile.organization_id);
+
+      if (propertyError) {
+        console.error("Error loading properties:", propertyError);
+        setPropertyPlans([]);
+        return;
+      }
+
+      const plansWithPropertyNames: PropertyMaintenancePlan[] = (
+        planData ?? []
+      ).map((plan) => ({
+        ...plan,
+        property_name:
+          propertyData?.find((property) => property.id === plan.property_id)
+            ?.name ?? "Unknown Property",
+      }));
+
+      setPropertyPlans(plansWithPropertyNames);
+    }
+
+    loadPropertyPlans();
   }, [user, role]);
 
   if (loading || !user) {
@@ -289,6 +351,70 @@ const [savingPlan, setSavingPlan] = useState(false);
                   {template.description && (
                     <p className="mt-2 text-sm text-gray-600">
                       {template.description}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Property Maintenance Plans
+            </h2>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Maintenance plans currently assigned to individual properties.
+            </p>
+          </div>
+
+          {propertyPlans.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
+              <h3 className="text-lg font-semibold text-gray-900">
+                No property maintenance plans
+              </h3>
+
+              <p className="mt-2 text-sm text-gray-500">
+                Property-specific maintenance plans will appear here when
+                they are assigned to properties.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {propertyPlans.map((plan) => (
+                <div
+                  key={plan.id}
+                  onClick={() =>
+                    router.push(`/maintenance/plans/${plan.id}`)
+                  }
+                  className="cursor-pointer rounded-xl border border-gray-200 p-5 transition hover:border-blue-400 hover:shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        {plan.name}
+                      </h3>
+
+                      <p className="mt-1 text-sm font-medium text-blue-600">
+                        {plan.property_name}
+                      </p>
+                    </div>
+
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
+                        plan.is_active
+                          ? "bg-green-100 text-green-700"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {plan.is_active ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+
+                  {plan.description && (
+                    <p className="mt-3 text-sm text-gray-600">
+                      {plan.description}
                     </p>
                   )}
                 </div>
