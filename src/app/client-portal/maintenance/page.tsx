@@ -36,124 +36,146 @@ export default function ClientMaintenancePage() {
   const [newPlanDescription, setNewPlanDescription] = useState("");
   const [creatingPlan, setCreatingPlan] = useState(false);
 
+  const [showCreateTask, setShowCreateTask] = useState(false);
+  const [newTaskName, setNewTaskName] = useState("");
+  const [newTaskDescription, setNewTaskDescription] = useState("");
+  const [newTaskScheduledDate, setNewTaskScheduledDate] = useState("");
+  const [creatingTask, setCreatingTask] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    async function loadTasksForPlan(planId: string) {
-      const { data: taskData, error: taskError } = await supabase
-        .from("maintenance_tasks")
-        .select(
-          "id, name, description, status, scheduled_date, completed_date, work_order_id"
-        )
-        .eq("plan_id", planId)
-        .order("scheduled_date", { ascending: true });
+  async function loadTasksForPlan(planId: string) {
+    const { data: taskData, error: taskError } = await supabase
+      .from("maintenance_tasks")
+      .select(
+        "id, name, description, status, scheduled_date, completed_date, work_order_id"
+      )
+      .eq("plan_id", planId)
+      .order("scheduled_date", { ascending: true });
 
-      if (taskError) {
-        throw taskError;
-      }
+    if (taskError) {
+      throw taskError;
+    }
 
-      const tasksWithWorkOrders = await Promise.all(
-        (taskData ?? []).map(async (task) => {
-          if (!task.work_order_id) {
-            return {
-              ...task,
-              work_order_status: null,
-              work_order_due_date: null,
-            };
-          }
-
-          const { data: workOrder, error: workOrderError } =
-            await supabase
-              .from("work_orders")
-              .select("id, status, due_date")
-              .eq("id", task.work_order_id)
-              .maybeSingle();
-
-          if (workOrderError) {
-            throw workOrderError;
-          }
-
+    const tasksWithWorkOrders = await Promise.all(
+      (taskData ?? []).map(async (task) => {
+        if (!task.work_order_id) {
           return {
             ...task,
-            work_order_status: workOrder?.status ?? null,
-            work_order_due_date: workOrder?.due_date ?? null,
+            work_order_status: null,
+            work_order_due_date: null,
           };
-        })
-      );
-
-      setTasks(tasksWithWorkOrders);
-    }
-
-    async function loadMaintenance() {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user) {
-          setError("You must be logged in to view maintenance.");
-          setLoading(false);
-          return;
         }
 
-        const { data: access, error: accessError } = await supabase
-          .from("client_properties")
-          .select("property_id")
-          .eq("profile_id", user.id);
+        const { data: workOrder, error: workOrderError } =
+          await supabase
+            .from("work_orders")
+            .select("id, status, due_date")
+            .eq("id", task.work_order_id)
+            .maybeSingle();
 
-        if (accessError) {
-          throw accessError;
+        if (workOrderError) {
+          throw workOrderError;
         }
 
-        if (!access || access.length === 0) {
-          setError("No property has been assigned to your account.");
-          setLoading(false);
-          return;
-        }
+        return {
+          ...task,
+          work_order_status: workOrder?.status ?? null,
+          work_order_due_date: workOrder?.due_date ?? null,
+        };
+      })
+    );
 
-        const propertyIds = access.map((item) => item.property_id);
+    setTasks(tasksWithWorkOrders);
+  }
 
-        const { data: planData, error: planError } = await supabase
-          .from("property_maintenance_plans")
-          .select("id, name, description, property_id")
-          .in("property_id", propertyIds)
-          .eq("is_active", true)
-          .order("name", { ascending: true });
+  async function loadMaintenance() {
+    try {
+      setError("");
 
-        if (planError) {
-          throw planError;
-        }
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-        setPlans(planData ?? []);
-
-        if (!planData || planData.length === 0) {
-          setSelectedPlan(null);
-          setTasks([]);
-          setLoading(false);
-          return;
-        }
-
-        const firstPlan = planData[0];
-
-        setSelectedPlan(firstPlan);
-
-        await loadTasksForPlan(firstPlan.id);
-      } catch (err) {
-        console.error("CLIENT MAINTENANCE ERROR:", err);
-
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Unable to load your maintenance information."
-        );
-      } finally {
+      if (!user) {
+        setError("You must be logged in to view maintenance.");
         setLoading(false);
+        return;
       }
-    }
 
-    loadMaintenance();
-  }, []);
+      const { data: access, error: accessError } = await supabase
+        .from("client_properties")
+        .select("property_id")
+        .eq("profile_id", user.id);
+
+      if (accessError) {
+        throw accessError;
+      }
+
+      if (!access || access.length === 0) {
+        setError("No property has been assigned to your account.");
+        setLoading(false);
+        return;
+      }
+
+      const propertyIds = access.map((item) => item.property_id);
+
+      const { data: planData, error: planError } = await supabase
+        .from("property_maintenance_plans")
+        .select("id, name, description, property_id")
+        .in("property_id", propertyIds)
+        .eq("is_active", true)
+        .order("name", { ascending: true });
+
+      if (planError) {
+        throw planError;
+      }
+
+      setPlans(planData ?? []);
+
+      if (!planData || planData.length === 0) {
+        setSelectedPlan(null);
+        setTasks([]);
+        setLoading(false);
+        return;
+      }
+
+      const firstPlan = planData[0];
+
+      setSelectedPlan(firstPlan);
+
+      await loadTasksForPlan(firstPlan.id);
+    } catch (err) {
+      console.error("CLIENT MAINTENANCE ERROR:", err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to load your maintenance information."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSelectPlan(plan: MaintenancePlan) {
+    setSelectedPlan(plan);
+    setError("");
+    setShowCreateTask(false);
+
+    try {
+      await loadTasksForPlan(plan.id);
+    } catch (err) {
+      console.error("Error loading maintenance plan:", err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to load this maintenance plan."
+      );
+    }
+  }
 
   async function handleCreatePlan() {
     if (!newPlanName.trim()) {
@@ -238,6 +260,118 @@ export default function ClientMaintenancePage() {
     }
   }
 
+  async function handleCreateTask() {
+    if (!selectedPlan) {
+      setError("Please select a maintenance plan first.");
+      return;
+    }
+
+    if (!newTaskName.trim()) {
+      setError("Please enter a maintenance task name.");
+      return;
+    }
+
+    setCreatingTask(true);
+    setError("");
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        throw new Error(
+          "You must be logged in to create a maintenance task."
+        );
+      }
+
+      const { data: access, error: accessError } = await supabase
+        .from("client_properties")
+        .select("property_id")
+        .eq("profile_id", user.id)
+        .eq("property_id", selectedPlan.property_id)
+        .maybeSingle();
+
+      if (accessError) {
+        throw accessError;
+      }
+
+      if (!access) {
+        throw new Error(
+          "You are not authorized to add a task to this property."
+        );
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("organization_id")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      if (!profile?.organization_id) {
+        throw new Error("Unable to determine your organization.");
+      }
+
+      const { data: newTask, error: createError } = await supabase
+        .from("maintenance_tasks")
+        .insert({
+          organization_id: profile.organization_id,
+          property_id: selectedPlan.property_id,
+          plan_id: selectedPlan.id,
+          template_item_id: null,
+          asset_id: null,
+          name: newTaskName.trim(),
+          description: newTaskDescription.trim() || null,
+          status: "pending",
+          scheduled_date: newTaskScheduledDate || null,
+          completed_date: null,
+          assigned_to: null,
+          work_order_id: null,
+        })
+        .select(
+          "id, name, description, status, scheduled_date, completed_date, work_order_id"
+        )
+        .single();
+
+      if (createError) {
+        throw createError;
+      }
+
+      const taskWithWorkOrder: MaintenanceTask = {
+        ...newTask,
+        work_order_status: null,
+        work_order_due_date: null,
+      };
+
+      setTasks((currentTasks) => [
+        ...currentTasks,
+        taskWithWorkOrder,
+      ]);
+
+      setNewTaskName("");
+      setNewTaskDescription("");
+      setNewTaskScheduledDate("");
+      setShowCreateTask(false);
+    } catch (err) {
+      console.error("Error creating maintenance task:", err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to create maintenance task."
+      );
+    } finally {
+      setCreatingTask(false);
+    }
+  }
+  useEffect(() => {
+    loadMaintenance();
+  }, []);
+
   function formatDate(date: string | null) {
     if (!date) {
       return "Not scheduled";
@@ -287,7 +421,7 @@ export default function ClientMaintenancePage() {
     );
   }
 
-  if (error) {
+  if (error && !selectedPlan) {
     return (
       <div className="flex min-h-screen bg-gray-100">
         <ClientSidebar />
@@ -358,6 +492,12 @@ export default function ClientMaintenancePage() {
                 </button>
               </div>
             </div>
+
+            {error && (
+              <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
 
             {showCreatePlan && (
               <div className="mb-6 rounded-xl bg-white p-6 shadow-sm">
@@ -439,73 +579,7 @@ export default function ClientMaintenancePage() {
                     <button
                       key={plan.id}
                       type="button"
-                      onClick={async () => {
-                        setSelectedPlan(plan);
-                        setError("");
-
-                        try {
-                          const { data: taskData, error: taskError } =
-                            await supabase
-                              .from("maintenance_tasks")
-                              .select(
-                                "id, name, description, status, scheduled_date, completed_date, work_order_id"
-                              )
-                              .eq("plan_id", plan.id)
-                              .order("scheduled_date", {
-                                ascending: true,
-                              });
-
-                          if (taskError) {
-                            throw taskError;
-                          }
-
-                          const tasksWithWorkOrders = await Promise.all(
-                            (taskData ?? []).map(async (task) => {
-                              if (!task.work_order_id) {
-                                return {
-                                  ...task,
-                                  work_order_status: null,
-                                  work_order_due_date: null,
-                                };
-                              }
-
-                              const {
-                                data: workOrder,
-                                error: workOrderError,
-                              } = await supabase
-                                .from("work_orders")
-                                .select("id, status, due_date")
-                                .eq("id", task.work_order_id)
-                                .maybeSingle();
-
-                              if (workOrderError) {
-                                throw workOrderError;
-                              }
-
-                              return {
-                                ...task,
-                                work_order_status:
-                                  workOrder?.status ?? null,
-                                work_order_due_date:
-                                  workOrder?.due_date ?? null,
-                              };
-                            })
-                          );
-
-                          setTasks(tasksWithWorkOrders);
-                        } catch (err) {
-                          console.error(
-                            "Error loading maintenance plan:",
-                            err
-                          );
-
-                          setError(
-                            err instanceof Error
-                              ? err.message
-                              : "Unable to load this maintenance plan."
-                          );
-                        }
-                      }}
+                      onClick={() => handleSelectPlan(plan)}
                       className={`rounded-lg px-4 py-3 text-sm font-semibold ${
                         selectedPlan?.id === plan.id
                           ? "bg-[#102A43] text-white"
@@ -533,22 +607,129 @@ export default function ClientMaintenancePage() {
             ) : (
               <>
                 <div className="rounded-xl bg-white p-6 shadow-sm">
-                  <h3 className="text-xl font-bold text-gray-900">
-                    {selectedPlan.name}
-                  </h3>
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">
+                        {selectedPlan.name}
+                      </h3>
 
-                  {selectedPlan.description && (
-                    <p className="mt-2 text-sm text-gray-600">
-                      {selectedPlan.description}
-                    </p>
-                  )}
+                      {selectedPlan.description && (
+                        <p className="mt-2 text-sm text-gray-600">
+                          {selectedPlan.description}
+                        </p>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateTask(true)}
+                      className="shrink-0 rounded-lg bg-[#102A43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#0b2033]"
+                    >
+                      + Add Maintenance Task
+                    </button>
+                  </div>
                 </div>
+
+                {showCreateTask && (
+                  <div className="mt-6 rounded-xl bg-white p-6 shadow-sm">
+                    <h3 className="text-xl font-bold text-gray-900">
+                      Add Maintenance Task
+                    </h3>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                      Add a maintenance item to this plan.
+                    </p>
+
+                    <div className="mt-5 space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Task Name
+                        </label>
+
+                        <input
+                          type="text"
+                          value={newTaskName}
+                          onChange={(event) =>
+                            setNewTaskName(event.target.value)
+                          }
+                          placeholder="Example: HVAC Service"
+                          className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#102A43] focus:ring-1 focus:ring-[#102A43]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Description
+                        </label>
+
+                        <textarea
+                          value={newTaskDescription}
+                          onChange={(event) =>
+                            setNewTaskDescription(event.target.value)
+                          }
+                          placeholder="Describe the maintenance work."
+                          rows={3}
+                          className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#102A43] focus:ring-1 focus:ring-[#102A43]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Scheduled Date
+                        </label>
+
+                        <input
+                          type="date"
+                          value={newTaskScheduledDate}
+                          onChange={(event) =>
+                            setNewTaskScheduledDate(event.target.value)
+                          }
+                          className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#102A43] focus:ring-1 focus:ring-[#102A43]"
+                        />
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowCreateTask(false);
+                            setNewTaskName("");
+                            setNewTaskDescription("");
+                            setNewTaskScheduledDate("");
+                          }}
+                          className="rounded-lg border border-gray-300 px-5 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                        >
+                          Cancel
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleCreateTask}
+                          disabled={
+                            creatingTask || !newTaskName.trim()
+                          }
+                          className="rounded-lg bg-[#102A43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#0b2033] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {creatingTask
+                            ? "Adding..."
+                            : "Add Task"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-6 space-y-4">
                   {tasks.length === 0 ? (
                     <div className="rounded-xl bg-white p-8 text-center shadow-sm">
                       <p className="text-sm text-gray-500">
-                        No maintenance tasks have been added to this plan yet.
+                        No maintenance tasks have been added to this plan
+                        yet.
+                      </p>
+
+                      <p className="mt-2 text-sm text-gray-400">
+                        Click &quot;+ Add Maintenance Task&quot; above to
+                        create the first one.
                       </p>
                     </div>
                   ) : (
@@ -566,7 +747,8 @@ export default function ClientMaintenancePage() {
 
                               <span
                                 className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusClasses(
-                                  task.work_order_status || task.status
+                                  task.work_order_status ||
+                                    task.status
                                 )}`}
                               >
                                 {task.work_order_status ||
@@ -602,7 +784,9 @@ export default function ClientMaintenancePage() {
                                   </span>
 
                                   <p className="font-medium text-gray-900">
-                                    {formatDate(task.completed_date)}
+                                    {formatDate(
+                                      task.completed_date
+                                    )}
                                   </p>
                                 </div>
                               )}
