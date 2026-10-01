@@ -35,6 +35,7 @@ export default function ClientMaintenancePage() {
   const [newPlanName, setNewPlanName] = useState("");
   const [newPlanDescription, setNewPlanDescription] = useState("");
   const [creatingPlan, setCreatingPlan] = useState(false);
+  const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
 
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [newTaskName, setNewTaskName] = useState("");
@@ -174,6 +175,60 @@ export default function ClientMaintenancePage() {
           ? err.message
           : "Unable to load this maintenance plan."
       );
+    }
+  }
+  async function handleDeletePlan(plan: MaintenancePlan) {
+    const confirmed = window.confirm(
+      `Delete "${plan.name}"?\n\nThis will remove the maintenance plan from your active plans.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingPlanId(plan.id);
+    setError("");
+
+    try {
+      const { error: deleteError } = await supabase
+        .from("property_maintenance_plans")
+        .update({ is_active: false })
+        .eq("id", plan.id);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      const remainingPlans = plans.filter(
+        (currentPlan) => currentPlan.id !== plan.id
+      );
+
+      setPlans(remainingPlans);
+
+      if (selectedPlan?.id === plan.id) {
+        if (remainingPlans.length > 0) {
+          const nextPlan = remainingPlans[0];
+
+          setSelectedPlan(nextPlan);
+          setShowCreateTask(false);
+
+          await loadTasksForPlan(nextPlan.id);
+        } else {
+          setSelectedPlan(null);
+          setTasks([]);
+          setShowCreateTask(false);
+        }
+      }
+    } catch (err) {
+      console.error("Error deleting maintenance plan:", err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to delete maintenance plan."
+      );
+    } finally {
+      setDeletingPlanId(null);
     }
   }
 
@@ -575,20 +630,39 @@ export default function ClientMaintenancePage() {
                 </h3>
 
                 <div className="mt-4 flex flex-wrap gap-3">
-                  {plans.map((plan) => (
-                    <button
-                      key={plan.id}
-                      type="button"
-                      onClick={() => handleSelectPlan(plan)}
-                      className={`rounded-lg px-4 py-3 text-sm font-semibold ${
-                        selectedPlan?.id === plan.id
-                          ? "bg-[#102A43] text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      {plan.name}
-                    </button>
-                  ))}
+                {plans.map((plan) => (
+  <div
+    key={plan.id}
+    className="relative"
+  >
+    <button
+      type="button"
+      onClick={() => handleSelectPlan(plan)}
+      disabled={deletingPlanId === plan.id}
+      className={`rounded-lg px-5 py-3 pr-10 text-sm font-semibold ${
+        selectedPlan?.id === plan.id
+          ? "bg-[#102A43] text-white"
+          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+      }`}
+    >
+      {plan.name}
+    </button>
+
+    <button
+      type="button"
+      onClick={() => handleDeletePlan(plan)}
+      disabled={deletingPlanId === plan.id}
+      aria-label={`Delete ${plan.name}`}
+      className={`absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${
+        selectedPlan?.id === plan.id
+          ? "text-white hover:bg-white/20"
+          : "text-gray-500 hover:bg-gray-200"
+      } disabled:cursor-not-allowed disabled:opacity-50`}
+    >
+      ×
+    </button>
+  </div>
+))}
                 </div>
               </div>
             )}
