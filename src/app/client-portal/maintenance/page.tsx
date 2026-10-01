@@ -637,7 +637,9 @@ export default function ClientMaintenancePage() {
   >
     <button
       type="button"
-      onClick={() => handleSelectPlan(plan)}
+      onClick={() =>
+        (window.location.href = `/client-portal/maintenance/${plan.id}`)
+      }
       disabled={deletingPlanId === plan.id}
       className={`rounded-lg px-5 py-3 pr-10 text-sm font-semibold ${
         selectedPlan?.id === plan.id
