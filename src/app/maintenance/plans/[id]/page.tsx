@@ -35,6 +35,9 @@ export default function MaintenancePlanPage() {
   const planId = params.id as string;
 
   const [plan, setPlan] = useState<MaintenanceTemplate | null>(null);
+  const [planKind, setPlanKind] = useState<"template" | "property_plan" | null>(
+    null
+  );
   const [loadingPlan, setLoadingPlan] = useState(true);
   const [items, setItems] = useState<MaintenanceTemplateItem[]>([]);
   
@@ -265,91 +268,180 @@ async function handleAssignPlan() {
       if (!user || role === "Client" || !planId) return;
   
       setLoadingPlan(true);
-  
-      const { data, error } = await supabase
+
+      const { data: templateData, error: templateError } = await supabase
         .from("maintenance_templates")
         .select("id, name, description, season, is_active")
         .eq("id", planId)
-        .single();
-  
-      if (error) {
-        console.error("Error loading maintenance plan:", error);
-        setPlan(null);
-      } else {
-        setPlan(data);
+        .maybeSingle();
+
+      if (templateError) {
+        console.error("Error loading maintenance plan:", templateError);
       }
-  
-      const { data: maintenanceItems, error: itemsError } = await supabase
-        .from("maintenance_template_items")
-        .select(
-          "id, name, description, recommended_month, sort_order, is_active"
-        )
-        .eq("template_id", planId)
-        .order("sort_order")
-        .order("created_at");
-  
-      if (itemsError) {
-        console.error("Error loading maintenance items:", itemsError);
+
+      if (templateData) {
+        setPlan(templateData);
+        setPlanKind("template");
+
+        const { data: maintenanceItems, error: itemsError } = await supabase
+          .from("maintenance_template_items")
+          .select(
+            "id, name, description, recommended_month, sort_order, is_active"
+          )
+          .eq("template_id", planId)
+          .order("sort_order")
+          .order("created_at");
+
+        if (itemsError) {
+          console.error("Error loading maintenance items:", itemsError);
+          setItems([]);
+        } else {
+          console.log("Maintenance items loaded:", maintenanceItems);
+          setItems(maintenanceItems ?? []);
+        }
+
+        const { data: propertyData, error: propertyError } = await supabase
+          .from("properties")
+          .select("id, name")
+          .order("name");
+
+        if (propertyError) {
+          console.error("Error loading properties:", propertyError);
+          setProperties([]);
+        } else {
+          setProperties(propertyData ?? []);
+        }
+
+        const { data: assignedPropertyData, error: assignedPropertyError } =
+          await supabase
+            .from("property_maintenance_plans")
+            .select(`
+              id,
+              property_id,
+              properties (
+                id,
+                name
+              )
+            `)
+            .eq("template_id", planId);
+
+        if (assignedPropertyError) {
+          console.error(
+            "Error loading assigned properties:",
+            assignedPropertyError
+          );
+          setAssignedProperties([]);
+        } else {
+          const uniqueAssignedProperties = new Map<string, Property>();
+
+          (assignedPropertyData ?? []).forEach((item) => {
+            const property = Array.isArray(item.properties)
+              ? (item.properties[0] as { id: string; name: string } | undefined)
+              : (item.properties as { id: string; name: string } | null);
+
+            if (property) {
+              uniqueAssignedProperties.set(property.id, {
+                id: property.id,
+                name: property.name,
+                maintenancePlanId: item.id,
+              });
+            }
+          });
+
+          setAssignedProperties(
+            Array.from(uniqueAssignedProperties.values())
+          );
+        }
+
+        setLoadingPlan(false);
+        return;
+      }
+
+      const { data: propertyPlan, error: propertyPlanError } = await supabase
+        .from("property_maintenance_plans")
+        .select("id, name, description, is_active, property_id")
+        .eq("id", planId)
+        .maybeSingle();
+
+      if (propertyPlanError) {
+        console.error(
+          "Error loading property maintenance plan:",
+          propertyPlanError
+        );
+        setPlan(null);
+        setPlanKind(null);
+        setItems([]);
+        setAssignedProperties([]);
+        setLoadingPlan(false);
+        return;
+      }
+
+      if (!propertyPlan) {
+        setPlan(null);
+        setPlanKind(null);
+        setItems([]);
+        setAssignedProperties([]);
+        setLoadingPlan(false);
+        return;
+      }
+
+      setPlan({
+        id: propertyPlan.id,
+        name: propertyPlan.name,
+        description: propertyPlan.description,
+        season: null,
+        is_active: propertyPlan.is_active,
+      });
+      setPlanKind("property_plan");
+      setProperties([]);
+
+      const { data: taskData, error: taskError } = await supabase
+        .from("maintenance_tasks")
+        .select("id, name, description")
+        .eq("plan_id", planId)
+        .order("scheduled_date", { ascending: true });
+
+      if (taskError) {
+        console.error("Error loading maintenance tasks:", taskError);
         setItems([]);
       } else {
-        console.log("Maintenance items loaded:", maintenanceItems);
-        setItems(maintenanceItems ?? []);
+        setItems(
+          (taskData ?? []).map((task, index) => ({
+            id: task.id,
+            name: task.name,
+            description: task.description,
+            recommended_month: null,
+            sort_order: index,
+            is_active: true,
+          }))
+        );
       }
-  
-      const { data: propertyData, error: propertyError } = await supabase
-        .from("properties")
-        .select("id, name")
-        .order("name");
-  
-      if (propertyError) {
-        console.error("Error loading properties:", propertyError);
-        setProperties([]);
-      } else {
-        setProperties(propertyData ?? []);
-      }
-      const { data: assignedPropertyData, error: assignedPropertyError } =
-      await supabase
-        .from("property_maintenance_plans")
-        .select(`
-          id,
-          property_id,
-          properties (
-            id,
-            name
-          )
-        `)
-        .eq("template_id", planId);
-     
-      
-  
+
+      const { data: assignedProperty, error: assignedPropertyError } =
+        await supabase
+          .from("properties")
+          .select("id, name")
+          .eq("id", propertyPlan.property_id)
+          .maybeSingle();
+
       if (assignedPropertyError) {
         console.error(
           "Error loading assigned properties:",
           assignedPropertyError
         );
         setAssignedProperties([]);
+      } else if (assignedProperty) {
+        setAssignedProperties([
+          {
+            id: assignedProperty.id,
+            name: assignedProperty.name,
+            maintenancePlanId: propertyPlan.id,
+          },
+        ]);
       } else {
-        const uniqueAssignedProperties = new Map<string, Property>();
-
-        (assignedPropertyData ?? []).forEach((item) => {
-          const property = Array.isArray(item.properties)
-            ? (item.properties[0] as { id: string; name: string } | undefined)
-            : (item.properties as { id: string; name: string } | null);
-        
-          if (property) {
-            uniqueAssignedProperties.set(property.id, {
-              id: property.id,
-              name: property.name,
-              maintenancePlanId: item.id,
-            });
-          }
-        });
-        
-        setAssignedProperties(
-          Array.from(uniqueAssignedProperties.values())
-        );
+        setAssignedProperties([]);
       }
-  
+
       setLoadingPlan(false);
     }
   
@@ -404,6 +496,7 @@ async function handleAssignPlan() {
                     </p>
                   )}
                 </div>
+                {planKind === "template" && (
                 <button
   type="button"
   onClick={() => {
@@ -415,6 +508,8 @@ async function handleAssignPlan() {
 >
   Assign to Property
 </button>
+                )}
+                {planKind === "template" && (
 <div
   id="assign-maintenance-plan-form"
   className="mt-6 hidden rounded-xl border border-gray-200 bg-gray-50 p-6"
@@ -475,6 +570,7 @@ onChange={(e) => setSelectedPropertyId(e.target.value)}
 </button>
   </div>
 </div>
+                )}
 
                 <span
                   className={`rounded-full px-3 py-1.5 text-sm font-medium ${
@@ -491,6 +587,7 @@ onChange={(e) => setSelectedPropertyId(e.target.value)}
   <h2 className="text-xl font-semibold text-gray-900">
     Assigned Properties
   </h2>
+  {planKind === "template" && (
   <button
   type="button"
   onClick={handleCreateTasks}
@@ -499,6 +596,7 @@ onChange={(e) => setSelectedPropertyId(e.target.value)}
 >
   {creatingTasks ? "Creating Tasks..." : "Create Maintenance Tasks"}
 </button>
+  )}
 
   {assignedProperties.length === 0 ? (
     <p className="mt-4 text-sm text-gray-500">
@@ -527,13 +625,18 @@ onChange={(e) => setSelectedPropertyId(e.target.value)}
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
-                    Maintenance Items
+                    {planKind === "property_plan"
+                      ? "Maintenance Tasks"
+                      : "Maintenance Items"}
                   </h2>
                   <p className="mt-1 text-sm text-gray-500">
-                    Maintenance tasks included in this seasonal plan.
+                    {planKind === "property_plan"
+                      ? "Maintenance tasks belonging to this property plan."
+                      : "Maintenance tasks included in this seasonal plan."}
                   </p>
                 </div>
 
+                {planKind === "template" && (
                 <button
   type="button"
   onClick={() => {
@@ -545,7 +648,9 @@ onChange={(e) => setSelectedPropertyId(e.target.value)}
 >
   + Add Maintenance Item
 </button>
+                )}
               </div>
+              {planKind === "template" && (
               <div
   id="create-maintenance-item-form"
   className="mb-6 hidden rounded-xl border border-gray-200 bg-gray-50 p-6"
@@ -639,6 +744,7 @@ onChange={(e) => setSelectedPropertyId(e.target.value)}
     </button>
   </div>
 </div>
+              )}
 {items.length === 0 ? (
   <div className="mt-6 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
     <h3 className="text-lg font-semibold text-gray-900">
@@ -646,7 +752,9 @@ onChange={(e) => setSelectedPropertyId(e.target.value)}
     </h3>
 
     <p className="mt-2 text-sm text-gray-500">
-      Add the first maintenance item to this plan.
+      {planKind === "property_plan"
+        ? "No maintenance tasks have been added to this property plan yet."
+        : "Add the first maintenance item to this plan."}
     </p>
   </div>
 ) : (

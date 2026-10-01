@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase";
 import ClientSidebar from "@/components/ClientSidebar";
+import MaintenanceChecklistPrint from "@/components/MaintenanceChecklistPrint";
 
 type MaintenancePlan = {
   id: string;
@@ -38,6 +39,14 @@ export default function ClientMaintenancePlanPage() {
 
   const [plan, setPlan] = useState<MaintenancePlan | null>(null);
   const [propertyName, setPropertyName] = useState("");
+  const [propertyInfo, setPropertyInfo] = useState<{
+    name?: string | null;
+    address?: string | null;
+    city?: string | null;
+    state?: string | null;
+  } | null>(null);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const shareMenuRef = useRef<HTMLDivElement | null>(null);
 
   const [tasks, setTasks] = useState<MaintenanceTask[]>([]);
 
@@ -200,7 +209,7 @@ export default function ClientMaintenancePlanPage() {
       const { data: propertyData, error: propertyError } =
         await supabase
           .from("properties")
-          .select("id, name")
+          .select("id, name, address, city, state")
           .eq("id", planData.property_id)
           .maybeSingle();
 
@@ -210,6 +219,7 @@ export default function ClientMaintenancePlanPage() {
 
       setPlan(planData);
       setPropertyName(propertyData?.name ?? "Property");
+      setPropertyInfo(propertyData);
 
       setEditPlanName(planData.name);
       setEditPlanDescription(planData.description ?? "");
@@ -231,6 +241,23 @@ export default function ClientMaintenancePlanPage() {
   useEffect(() => {
     loadPlan();
   }, [planId]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        shareMenuRef.current &&
+        !shareMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowShareMenu(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   async function handleSavePlan() {
     if (!plan) {
@@ -543,7 +570,8 @@ export default function ClientMaintenancePlanPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <>
+    <div className="flex min-h-screen bg-gray-100 print:hidden no-print">
       <ClientSidebar />
 
       <div className="flex flex-1 flex-col">
@@ -642,19 +670,52 @@ export default function ClientMaintenancePlanPage() {
                 </div>
 
                 {!editingPlan ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditPlanName(plan.name);
-                      setEditPlanDescription(
-                        plan.description ?? ""
-                      );
-                      setEditingPlan(true);
-                    }}
-                    className="shrink-0 rounded-lg border border-gray-300 px-5 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                  >
-                    Edit Plan
-                  </button>
+                  <div className="flex shrink-0 flex-wrap gap-3">
+                    <div className="relative" ref={shareMenuRef}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowShareMenu((current) => !current)
+                        }
+                        className="rounded-lg border-2 border-[#102A43] bg-white px-5 py-3 text-sm font-semibold text-[#102A43] hover:bg-gray-50"
+                      >
+                        Share Checklist
+                      </button>
+
+                      {showShareMenu && (
+                        <div className="absolute right-0 z-20 mt-2 w-56 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+                          <p className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-gray-500">
+                            Share options
+                          </p>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowShareMenu(false);
+                              window.print();
+                            }}
+                            className="w-full rounded-md px-3 py-2 text-left text-sm font-semibold text-gray-800 hover:bg-gray-100"
+                          >
+                            Print Checklist
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditPlanName(plan.name);
+                        setEditPlanDescription(
+                          plan.description ?? ""
+                        );
+                        setEditingPlan(true);
+                      }}
+                      className="rounded-lg border border-gray-300 px-5 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                    >
+                      Edit Plan
+                    </button>
+                  </div>
                 ) : (
                   <div className="flex shrink-0 gap-3">
                     <button
@@ -969,5 +1030,13 @@ export default function ClientMaintenancePlanPage() {
         </main>
       </div>
     </div>
+
+    <MaintenanceChecklistPrint
+      planName={plan.name}
+      planDescription={plan.description}
+      property={propertyInfo}
+      tasks={tasks}
+    />
+    </>
   );
 }

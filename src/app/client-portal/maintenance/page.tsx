@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
 import ClientSidebar from "@/components/ClientSidebar";
+import MaintenanceChecklistPrint from "@/components/MaintenanceChecklistPrint";
 
 type MaintenanceTask = {
   id: string;
@@ -23,6 +24,14 @@ type MaintenancePlan = {
   property_id: string;
 };
 
+type PropertyInfo = {
+  id: string;
+  name: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+};
+
 export default function ClientMaintenancePage() {
   const supabase = getSupabaseClient();
 
@@ -30,6 +39,11 @@ export default function ClientMaintenancePage() {
   const [selectedPlan, setSelectedPlan] =
     useState<MaintenancePlan | null>(null);
   const [tasks, setTasks] = useState<MaintenanceTask[]>([]);
+  const [propertiesById, setPropertiesById] = useState<
+    Record<string, PropertyInfo>
+  >({});
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const shareMenuRef = useRef<HTMLDivElement | null>(null);
 
   const [showCreatePlan, setShowCreatePlan] = useState(false);
   const [newPlanName, setNewPlanName] = useState("");
@@ -135,6 +149,31 @@ export default function ClientMaintenancePage() {
 
       setPlans(planData ?? []);
 
+      const uniquePropertyIds = [
+        ...new Set((planData ?? []).map((plan) => plan.property_id)),
+      ];
+
+      if (uniquePropertyIds.length > 0) {
+        const { data: propertyData, error: propertyError } = await supabase
+          .from("properties")
+          .select("id, name, address, city, state")
+          .in("id", uniquePropertyIds);
+
+        if (propertyError) {
+          throw propertyError;
+        }
+
+        const nextProperties: Record<string, PropertyInfo> = {};
+
+        (propertyData ?? []).forEach((property) => {
+          nextProperties[property.id] = property;
+        });
+
+        setPropertiesById(nextProperties);
+      } else {
+        setPropertiesById({});
+      }
+
       if (!planData || planData.length === 0) {
         setSelectedPlan(null);
         setTasks([]);
@@ -164,6 +203,7 @@ export default function ClientMaintenancePage() {
     setSelectedPlan(plan);
     setError("");
     setShowCreateTask(false);
+    setShowShareMenu(false);
 
     try {
       await loadTasksForPlan(plan.id);
@@ -211,12 +251,14 @@ export default function ClientMaintenancePage() {
 
           setSelectedPlan(nextPlan);
           setShowCreateTask(false);
+          setShowShareMenu(false);
 
           await loadTasksForPlan(nextPlan.id);
         } else {
           setSelectedPlan(null);
           setTasks([]);
           setShowCreateTask(false);
+          setShowShareMenu(false);
         }
       }
     } catch (err) {
@@ -298,6 +340,22 @@ export default function ClientMaintenancePage() {
       setPlans((currentPlans) => [...currentPlans, newPlan]);
       setSelectedPlan(newPlan);
       setTasks([]);
+      setShowShareMenu(false);
+
+      if (!propertiesById[newPlan.property_id]) {
+        const { data: propertyData } = await supabase
+          .from("properties")
+          .select("id, name, address, city, state")
+          .eq("id", newPlan.property_id)
+          .maybeSingle();
+
+        if (propertyData) {
+          setPropertiesById((currentProperties) => ({
+            ...currentProperties,
+            [propertyData.id]: propertyData,
+          }));
+        }
+      }
 
       setNewPlanName("");
       setNewPlanDescription("");
@@ -423,8 +481,26 @@ export default function ClientMaintenancePage() {
       setCreatingTask(false);
     }
   }
+
   useEffect(() => {
     loadMaintenance();
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        shareMenuRef.current &&
+        !shareMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowShareMenu(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   function formatDate(date: string | null) {
@@ -466,7 +542,7 @@ export default function ClientMaintenancePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-gray-100">
+      <div className="flex min-h-screen bg-gray-100 print:hidden">
         <ClientSidebar />
 
         <main className="flex flex-1 items-center justify-center">
@@ -478,7 +554,7 @@ export default function ClientMaintenancePage() {
 
   if (error && !selectedPlan) {
     return (
-      <div className="flex min-h-screen bg-gray-100">
+      <div className="flex min-h-screen bg-gray-100 print:hidden">
         <ClientSidebar />
 
         <main className="flex-1 p-8">
@@ -497,7 +573,8 @@ export default function ClientMaintenancePage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <>
+    <div className="no-print flex min-h-screen bg-gray-100 print:hidden">
       <ClientSidebar />
 
       <div className="flex flex-1 flex-col">
@@ -696,13 +773,46 @@ export default function ClientMaintenancePage() {
                       )}
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setShowCreateTask(true)}
-                      className="shrink-0 rounded-lg bg-[#102A43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#0b2033]"
-                    >
-                      + Add Maintenance Task
-                    </button>
+                    <div className="flex shrink-0 flex-wrap gap-3">
+                      <div className="relative" ref={shareMenuRef}>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowShareMenu((current) => !current)
+                          }
+                          className="rounded-lg border-2 border-[#102A43] bg-white px-5 py-3 text-sm font-semibold text-[#102A43] hover:bg-gray-50"
+                        >
+                          Share Checklist
+                        </button>
+
+                        {showShareMenu && (
+                          <div className="absolute right-0 z-20 mt-2 w-56 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+                            <p className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-gray-500">
+                              Share options
+                            </p>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowShareMenu(false);
+                                window.print();
+                              }}
+                              className="w-full rounded-md px-3 py-2 text-left text-sm font-semibold text-gray-800 hover:bg-gray-100"
+                            >
+                              Print Checklist
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowCreateTask(true)}
+                        className="rounded-lg bg-[#102A43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#0b2033]"
+                      >
+                        + Add Maintenance Task
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -897,5 +1007,15 @@ export default function ClientMaintenancePage() {
         </main>
       </div>
     </div>
+
+    {selectedPlan && (
+      <MaintenanceChecklistPrint
+        planName={selectedPlan.name}
+        planDescription={selectedPlan.description}
+        property={propertiesById[selectedPlan.property_id]}
+        tasks={tasks}
+      />
+    )}
+    </>
   );
 }
