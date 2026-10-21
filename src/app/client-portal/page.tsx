@@ -13,6 +13,18 @@ type Property = {
   property_type: string | null;
   status: string | null;
 };
+type Asset = {
+  id: string;
+  property_id: string;
+  name: string;
+  asset_type: string | null;
+  manufacturer: string | null;
+  model: string | null;
+  serial_number: string | null;
+  install_date: string | null;
+  status: string | null;
+  notes: string | null;
+};
 
 type WorkOrder = {
   id: string;
@@ -38,11 +50,13 @@ export default function ClientPortalPage() {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [workOrderVendors, setWorkOrderVendors] = useState<
   WorkOrderVendor[]
+
 >([]);
+const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<
-  "Overview" | "Assets" | "Work Orders" | "Service History"
+  "Overview" | "Assets" | "Work Orders" | "Service History" | "Inspections"
 >("Overview");
   const [currentMonth, setCurrentMonth] = useState(() => {
     const today = new Date();
@@ -93,6 +107,19 @@ export default function ClientPortalPage() {
         }
 
         setProperty(propertyData);
+        const { data: assetData, error: assetError } = await supabase
+  .from("assets")
+  .select(
+    "id, property_id, name, asset_type, manufacturer, model, serial_number, install_date, status, notes"
+  )
+  .eq("property_id", propertyData.id)
+  .order("name", { ascending: true });
+
+if (assetError) {
+  throw assetError;
+}
+
+setAssets(assetData ?? []);
 
         const { data: workOrderData, error: workOrderError } =
           await supabase
@@ -289,7 +316,7 @@ setWorkOrderVendors(vendorData ?? []);
           <div className="mx-auto max-w-6xl">
           <div className="mb-8 border-b border-gray-200">
   <div className="flex flex-wrap gap-8">
-    {["Overview", "Assets", "Work Orders", "Service History"].map(
+  {["Overview", "Assets", "Work Orders", "Service History", "Inspections"].map(
       (tab) => (
         <button
           key={tab}
@@ -297,10 +324,11 @@ setWorkOrderVendors(vendorData ?? []);
           onClick={() =>
             setActiveTab(
               tab as
-                | "Overview"
-                | "Assets"
-                | "Work Orders"
-                | "Service History"
+              | "Overview"
+              | "Assets"
+              | "Work Orders"
+              | "Service History"
+              | "Inspections"
             )
           }
           className={
@@ -516,6 +544,163 @@ setWorkOrderVendors(vendorData ?? []);
           );
         })}
       </div>
+    </div>
+  </div>
+)}
+{activeTab === "Assets" && (
+  <div className="rounded-xl bg-white shadow-sm">
+    <div className="border-b p-6">
+      <h2 className="text-xl font-bold text-gray-900">
+        Property Assets
+      </h2>
+
+      <p className="mt-1 text-sm text-gray-500">
+        Equipment and assets associated with your property.
+      </p>
+    </div>
+
+    <div className="p-6">
+      {assets.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              className="h-6 w-6 text-blue-600"
+            >
+              <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" />
+              <path d="m4.5 7.8 7.5 4.4 7.5-4.4M12 12.2V21" />
+            </svg>
+          </div>
+
+          <p className="text-sm font-medium text-gray-700">
+            No assets have been added yet.
+          </p>
+
+          <p className="mt-1 text-sm text-gray-500">
+            Property equipment and assets will appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-5 md:grid-cols-2">
+          {assets.map((asset) => (
+            <div
+              key={asset.id}
+              className="rounded-xl border border-gray-200 bg-white p-5"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      className="h-6 w-6 text-blue-600"
+                    >
+                      <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" />
+                      <path d="m4.5 7.8 7.5 4.4 7.5-4.4M12 12.2V21" />
+                    </svg>
+                  </div>
+
+                  <div className="min-w-0">
+                    <h3 className="truncate text-base font-semibold text-gray-900">
+                      {asset.name}
+                    </h3>
+
+                    {asset.asset_type && (
+                      <p className="mt-1 text-sm text-gray-500">
+                        {asset.asset_type}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {asset.status && (
+                  <span
+                    className={
+                      "shrink-0 rounded-full px-2.5 py-1 text-xs font-medium " +
+                      (asset.status.toLowerCase() === "active"
+                        ? "bg-green-50 text-green-700"
+                        : "bg-gray-100 text-gray-600")
+                    }
+                  >
+                    {asset.status}
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-5 space-y-3 border-t border-gray-100 pt-5">
+                {asset.manufacturer && (
+                  <div className="flex justify-between gap-4">
+                    <span className="text-sm text-gray-500">
+                      Manufacturer
+                    </span>
+
+                    <span className="text-right text-sm font-medium text-gray-900">
+                      {asset.manufacturer}
+                    </span>
+                  </div>
+                )}
+
+                {asset.model && (
+                  <div className="flex justify-between gap-4">
+                    <span className="text-sm text-gray-500">
+                      Model
+                    </span>
+
+                    <span className="text-right text-sm font-medium text-gray-900">
+                      {asset.model}
+                    </span>
+                  </div>
+                )}
+
+                {asset.serial_number && (
+                  <div className="flex justify-between gap-4">
+                    <span className="text-sm text-gray-500">
+                      Serial Number
+                    </span>
+
+                    <span className="break-all text-right text-sm font-medium text-gray-900">
+                      {asset.serial_number}
+                    </span>
+                  </div>
+                )}
+
+                {asset.install_date && (
+                  <div className="flex justify-between gap-4">
+                    <span className="text-sm text-gray-500">
+                      Install Date
+                    </span>
+
+                    <span className="text-right text-sm font-medium text-gray-900">
+                      {new Date(
+                        asset.install_date + "T00:00:00"
+                      ).toLocaleDateString("en-US")}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {asset.notes && (
+                <div className="mt-5 border-t border-gray-100 pt-5">
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    Notes
+                  </p>
+
+                  <p className="text-sm leading-6 text-gray-600">
+                    {asset.notes}
+                  </p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   </div>
 )}
