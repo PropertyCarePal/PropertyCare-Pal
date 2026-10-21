@@ -9,9 +9,18 @@ const menuItems = [
   { name: "Work Orders", href: "/work-orders", icon: "work-orders" },
   { name: "Assets", href: "/assets", icon: "assets" },
   { name: "Maintenance", href: "/maintenance", icon: "maintenance" },
-{ name: "Maintenance Tasks", href: "/maintenance/tasks", icon: "maintenance-tasks" },
+  {
+    name: "Maintenance Tasks",
+    href: "/maintenance/tasks",
+    icon: "maintenance-tasks",
+  },
   { name: "Vendors", href: "/vendors", icon: "vendors" },
   { name: "Inspections", href: "/inspections", icon: "inspections" },
+  {
+    name: "Inspection Packages",
+    href: "/inspection-templates",
+    icon: "inspection-packages",
+  },
   { name: "Documents", href: "/documents", icon: "documents" },
   { name: "Reports", href: "/reports", icon: "reports" },
   { name: "Settings", href: "/settings", icon: "settings" },
@@ -76,35 +85,38 @@ function MenuIcon({
           <path d="M8 9h8M8 13h6M8 17h4" />
         </svg>
       );
-      case "maintenance":
-        return (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            className={className}
-          >
-            <path d="M14.7 6.3a4 4 0 0 0-5.6 5.6L4 17v3h3l5.1-5.1a4 4 0 0 0 5.6-5.6l-2.2 2.2-2-2 2.2-2.2Z" />
-            <path d="m14 10 2 2" />
-          </svg>
-        );
-        case "maintenance-tasks":
-          return (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              className={className}
-            >
-              <rect x="5" y="3" width="14" height="18" rx="2" />
-              <path d="M8 7h8M8 11h8M8 15h5" />
-              <path d="m15 15 1.5 1.5L19 14" />
-            </svg>
-          );
+
+    case "maintenance":
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          className={className}
+        >
+          <path d="M14.7 6.3a4 4 0 0 0-5.6 5.6L4 17v3h3l5.1-5.1a4 4 0 0 0 5.6-5.6l-2.2 2.2-2-2 2.2-2.2Z" />
+          <path d="m14 10 2 2" />
+        </svg>
+      );
+
+    case "maintenance-tasks":
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          className={className}
+        >
+          <rect x="5" y="3" width="14" height="18" rx="2" />
+          <path d="M8 7h8M8 11h8M8 15h5" />
+          <path d="m15 15 1.5 1.5L19 14" />
+        </svg>
+      );
+
     case "assets":
       return (
         <svg
@@ -151,6 +163,21 @@ function MenuIcon({
           <path d="M8 3h8v3H8z" />
           <rect x="5" y="5" width="14" height="16" rx="2" />
           <path d="m8 13 2.5 2.5L16 10" />
+        </svg>
+      );
+
+    case "inspection-packages":
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          className={className}
+        >
+          <rect x="4" y="4" width="16" height="16" rx="2" />
+          <path d="M8 8h8M8 12h8M8 16h5" />
         </svg>
       );
 
